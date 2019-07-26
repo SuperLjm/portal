@@ -1,2 +1,2 @@
-log(崔志远)
-owner: 李佳明
+console.log(李佳明)
+owner: 崔志远
