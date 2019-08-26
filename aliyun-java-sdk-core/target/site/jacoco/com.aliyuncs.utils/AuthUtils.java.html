@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.utils</a> &gt; <span class="el_source">AuthUtils.java</span></div><h1>AuthUtils.java</h1><pre class="source lang-java linenums">package com.aliyuncs.utils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+
+<span class="fc" id="L8">public class AuthUtils {</span>
+<span class="fc" id="L9">    private static volatile String clientType = System.getenv(&quot;ALIBABA_CLOUD_PROFILE&quot;);</span>
+    private static volatile String environmentAccessKeyId;
+    private static volatile String environmentAccesskeySecret;
+    private static volatile String environmentECSMetaData;
+    private static volatile String environmentCredentialsFile;
+    private static volatile String privateKey;
+
+    public static String getPrivateKey(String filePath) {
+<span class="fc bfc" id="L17" title="All 2 branches covered.">        if (null == privateKey) {</span>
+<span class="fc" id="L18">            synchronized (AuthUtils.class) {</span>
+<span class="pc bpc" id="L19" title="1 of 2 branches missed.">                if (null == privateKey) {</span>
+<span class="fc" id="L20">                    FileInputStream in = null;</span>
+                    byte[] buffer;
+                    try {
+<span class="fc" id="L23">                        in = new FileInputStream(new File(filePath));</span>
+<span class="fc" id="L24">                        buffer = new byte[in.available()];</span>
+<span class="fc" id="L25">                        in.read(buffer);</span>
+<span class="fc" id="L26">                        privateKey = new String(buffer, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L27">                    } catch (IOException e) {</span>
+<span class="nc" id="L28">                        e.printStackTrace();</span>
+                    } finally {
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">                        if (in != null) {</span>
+                            try {
+<span class="fc" id="L32">                                in.close();</span>
+<span class="nc" id="L33">                            } catch (IOException e) {</span>
+<span class="nc" id="L34">                                e.printStackTrace();</span>
+<span class="fc" id="L35">                            }</span>
+                        }
+                    }
+                }
+<span class="fc" id="L39">            }</span>
+        }
+<span class="fc" id="L41">        return privateKey;</span>
+    }
+
+    public static void setPrivateKey(String key) {
+<span class="fc" id="L45">        privateKey = key;</span>
+<span class="fc" id="L46">    }</span>
+
+    public static String getClientType() {
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (null == clientType) {</span>
+<span class="fc" id="L50">            AuthUtils.clientType = &quot;default&quot;;</span>
+<span class="fc" id="L51">            return AuthUtils.clientType;</span>
+        } else {
+<span class="fc" id="L53">            return AuthUtils.clientType;</span>
+        }
+    }
+
+    public static void setClientType(String clientType) {
+<span class="fc" id="L58">        AuthUtils.clientType = clientType;</span>
+<span class="fc" id="L59">    }</span>
+
+    public static String getEnvironmentAccessKeyId() {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (null == AuthUtils.environmentAccessKeyId) {</span>
+<span class="fc" id="L63">            return System.getenv(&quot;ALIBABA_CLOUD_ACCESS_KEY_ID&quot;);</span>
+        } else {
+<span class="fc" id="L65">            return AuthUtils.environmentAccessKeyId;</span>
+        }
+    }
+
+    public static void setEnvironmentAccessKeyId(String environmentAccessKeyId) {
+<span class="fc" id="L70">        AuthUtils.environmentAccessKeyId = environmentAccessKeyId;</span>
+<span class="fc" id="L71">    }</span>
+
+    public static String getEnvironmentAccessKeySecret() {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (null == AuthUtils.environmentAccesskeySecret) {</span>
+<span class="fc" id="L75">            return System.getenv(&quot;ALIBABA_CLOUD_ACCESS_KEY_SECRET&quot;);</span>
+        } else {
+<span class="fc" id="L77">            return AuthUtils.environmentAccesskeySecret;</span>
+        }
+    }
+
+    public static void setEnvironmentAccessKeySecret(String environmentAccesskeySecret) {
+<span class="fc" id="L82">        AuthUtils.environmentAccesskeySecret = environmentAccesskeySecret;</span>
+<span class="fc" id="L83">    }</span>
+
+    public static String getEnvironmentECSMetaData() {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (null == AuthUtils.environmentECSMetaData) {</span>
+<span class="fc" id="L87">            return System.getenv(&quot;ALIBABA_CLOUD_ECS_METADATA&quot;);</span>
+        } else {
+<span class="fc" id="L89">            return AuthUtils.environmentECSMetaData;</span>
+        }
+    }
+
+    public static void setEnvironmentECSMetaData(String environmentECSMetaData) {
+<span class="fc" id="L94">        AuthUtils.environmentECSMetaData = environmentECSMetaData;</span>
+<span class="fc" id="L95">    }</span>
+
+    public static String getEnvironmentCredentialsFile() {
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (null == AuthUtils.environmentCredentialsFile) {</span>
+<span class="fc" id="L99">            return System.getenv(&quot;ALIBABA_CLOUD_CREDENTIALS_FILE&quot;);</span>
+        } else {
+<span class="fc" id="L101">            return AuthUtils.environmentCredentialsFile;</span>
+        }
+    }
+
+    public static void setEnvironmentCredentialsFile(String environmentCredentialsFile) {
+<span class="fc" id="L106">        AuthUtils.environmentCredentialsFile = environmentCredentialsFile;</span>
+<span class="fc" id="L107">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

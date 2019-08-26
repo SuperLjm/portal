@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpMessage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.http</a> &gt; <span class="el_source">HttpMessage.java</span></div><h1>HttpMessage.java</h1><pre class="source lang-java linenums">package com.aliyuncs.http;
+
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.utils.ParameterHelper;
+import lombok.ToString;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.UnsupportedEncodingException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="fc" id="L14">@ToString</span>
+public abstract class HttpMessage {
+
+    protected static final String CONTENT_TYPE = &quot;Content-Type&quot;;
+    protected static final String CONTENT_MD5 = &quot;Content-MD5&quot;;
+    protected static final String CONTENT_LENGTH = &quot;Content-Length&quot;;
+<span class="fc" id="L20">    protected FormatType httpContentType = null;</span>
+<span class="fc" id="L21">    protected byte[] httpContent = null;</span>
+<span class="fc" id="L22">    protected String encoding = null;</span>
+<span class="fc" id="L23">    protected Map&lt;String, String&gt; headers = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L24">    protected Integer connectTimeout = null;</span>
+<span class="fc" id="L25">    protected Integer readTimeout = null;</span>
+<span class="fc" id="L26">    private String url = null;</span>
+<span class="fc" id="L27">    private MethodType method = null;</span>
+<span class="fc" id="L28">    protected boolean ignoreSSLCerts = false;</span>
+<span class="fc" id="L29">    private KeyManager[] keyManagers = null;</span>
+<span class="fc" id="L30">    private X509TrustManager[] x509TrustManagers = null;</span>
+
+    public KeyManager[] getKeyManagers() {
+<span class="fc" id="L33">        return keyManagers;</span>
+    }
+
+    public void setKeyManagers(KeyManager[] keyManagers) {
+<span class="fc" id="L37">        this.keyManagers = keyManagers;</span>
+<span class="fc" id="L38">    }</span>
+
+    public X509TrustManager[] getX509TrustManagers() {
+<span class="fc" id="L41">        return x509TrustManagers;</span>
+    }
+
+    public void setX509TrustManagers(X509TrustManager[] x509TrustManagers) {
+<span class="fc" id="L45">        this.x509TrustManagers = x509TrustManagers;</span>
+<span class="fc" id="L46">    }</span>
+
+    public boolean isIgnoreSSLCerts() {
+<span class="fc" id="L49">        return ignoreSSLCerts;</span>
+    }
+
+    public void setIgnoreSSLCerts(boolean ignoreSSLCerts) {
+<span class="fc" id="L53">        this.ignoreSSLCerts = ignoreSSLCerts;</span>
+<span class="fc" id="L54">    }</span>
+
+<span class="fc" id="L56">    public HttpMessage(String strUrl) {</span>
+<span class="fc" id="L57">        this.url = strUrl;</span>
+<span class="fc" id="L58">    }</span>
+
+<span class="fc" id="L60">    public HttpMessage() {</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * @Deprecated : Use getSysUrl instead of this
+     */
+    @Deprecated
+    public String getUrl() {
+<span class="fc" id="L68">        return url;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysUrl instead of this
+     */
+    @Deprecated
+    protected void setUrl(String url) {
+<span class="fc" id="L76">        this.url = url;</span>
+<span class="fc" id="L77">    }</span>
+
+    /**
+     * @Deprecated : Use getSysMethod instead of this
+     */
+    @Deprecated
+    public MethodType getMethod() {
+<span class="fc" id="L84">        return method;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysMethod instead of this
+     */
+    @Deprecated
+    public void setMethod(MethodType method) {
+<span class="fc" id="L92">        this.method = method;</span>
+        //This is the pop rule and the put method accepts only json data
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (MethodType.PUT == method) {</span>
+<span class="fc" id="L95">            setHttpContentType(FormatType.JSON);</span>
+        }
+<span class="fc" id="L97">    }</span>
+
+    public FormatType getHttpContentType() {
+<span class="fc" id="L100">        return httpContentType;</span>
+    }
+
+    public void setHttpContentType(FormatType httpContentType) {
+<span class="fc" id="L104">        this.httpContentType = httpContentType;</span>
+<span class="fc bfc" id="L105" title="All 4 branches covered.">        if (null != this.httpContent || null != httpContentType) {</span>
+<span class="fc" id="L106">            this.headers.put(CONTENT_TYPE, getContentTypeValue(this.httpContentType, this.encoding));</span>
+        } else {
+<span class="fc" id="L108">            this.headers.remove(CONTENT_TYPE);</span>
+        }
+<span class="fc" id="L110">    }</span>
+
+    public byte[] getHttpContent() {
+<span class="fc" id="L113">        return httpContent;</span>
+    }
+
+    public void setHttpContent(byte[] content, String encoding, FormatType format) {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (null == content) {</span>
+<span class="fc" id="L118">            this.headers.remove(CONTENT_MD5);</span>
+<span class="fc" id="L119">            this.headers.put(CONTENT_LENGTH, &quot;0&quot;);</span>
+<span class="fc" id="L120">            this.headers.remove(CONTENT_TYPE);</span>
+<span class="fc" id="L121">            this.httpContentType = null;</span>
+<span class="fc" id="L122">            this.httpContent = null;</span>
+<span class="fc" id="L123">            this.encoding = null;</span>
+<span class="fc" id="L124">            return;</span>
+        }
+
+        // for GET HEADER DELETE OPTION method, sdk should ignore the content
+<span class="fc bfc" id="L128" title="All 4 branches covered.">        if (getSysMethod() != null &amp;&amp; !getSysMethod().hasContent()) {</span>
+<span class="fc" id="L129">            content = new byte[0];</span>
+        }
+
+<span class="fc" id="L132">        this.httpContent = content;</span>
+<span class="fc" id="L133">        this.encoding = encoding;</span>
+<span class="fc" id="L134">        String contentLen = String.valueOf(content.length);</span>
+<span class="fc" id="L135">        String strMd5 = ParameterHelper.md5Sum(content);</span>
+<span class="fc" id="L136">        this.headers.put(CONTENT_MD5, strMd5);</span>
+<span class="fc" id="L137">        this.headers.put(CONTENT_LENGTH, contentLen);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (null != format) {</span>
+<span class="fc" id="L139">            this.headers.put(CONTENT_TYPE, FormatType.mapFormatToAccept(format));</span>
+        }
+<span class="fc" id="L141">    }</span>
+
+    /**
+     * @Deprecated : Use getSysEncoding instead of this
+     */
+    @Deprecated
+    public String getEncoding() {
+<span class="fc" id="L148">        return encoding;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysEncoding instead of this
+     */
+    @Deprecated
+    public void setEncoding(String encoding) {
+<span class="fc" id="L156">        this.encoding = encoding;</span>
+<span class="fc" id="L157">    }</span>
+
+    public void putHeaderParameter(String name, String value) {
+<span class="fc bfc" id="L160" title="All 4 branches covered.">        if (null != name &amp;&amp; null != value) {</span>
+<span class="fc" id="L161">            this.headers.put(name, value);</span>
+        }
+<span class="fc" id="L163">    }</span>
+
+    public String getHeaderValue(String name) {
+<span class="fc" id="L166">        return this.headers.get(name);</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysConnectTimeout instead of this
+     */
+    @Deprecated
+    public Integer getConnectTimeout() {
+<span class="fc" id="L174">        return connectTimeout;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysConnectTimeout instead of this
+     */
+    @Deprecated
+    public void setConnectTimeout(Integer connectTimeout) {
+<span class="fc" id="L182">        this.connectTimeout = connectTimeout;</span>
+<span class="fc" id="L183">    }</span>
+
+    /**
+     * @Deprecated : Use getSysReadTimeout instead of this
+     */
+    @Deprecated
+    public Integer getReadTimeout() {
+<span class="fc" id="L190">        return readTimeout;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysReadTimeout instead of this
+     */
+    @Deprecated
+    public void setReadTimeout(Integer readTimeout) {
+<span class="fc" id="L198">        this.readTimeout = readTimeout;</span>
+<span class="fc" id="L199">    }</span>
+
+    /**
+     * @Deprecated : Use getSysHeaders instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getHeaders() {
+<span class="fc" id="L206">        return Collections.unmodifiableMap(headers);</span>
+    }
+
+    public String getContentTypeValue(FormatType contentType, String encoding) {
+<span class="fc bfc" id="L210" title="All 4 branches covered.">        if (null != contentType &amp;&amp; null != encoding) {</span>
+<span class="fc" id="L211">            return FormatType.mapFormatToAccept(contentType) +</span>
+<span class="fc" id="L212">                    &quot;;charset=&quot; + encoding.toLowerCase();</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        } else if (null != contentType) {</span>
+<span class="fc" id="L214">            return FormatType.mapFormatToAccept(contentType);</span>
+        }
+<span class="fc" id="L216">        return null;</span>
+    }
+
+    public String getHttpContentString() throws ClientException {
+<span class="fc" id="L220">        String stringContent = &quot;&quot;;</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (this.httpContent != null) {</span>
+            try {
+<span class="fc bfc" id="L223" title="All 2 branches covered.">                if (this.encoding == null) {</span>
+<span class="fc" id="L224">                    stringContent = new String(this.httpContent);</span>
+                } else {
+<span class="fc" id="L226">                    stringContent = new String(this.httpContent, this.encoding);</span>
+                }
+<span class="fc" id="L228">            } catch (UnsupportedEncodingException exp) {</span>
+<span class="fc" id="L229">                throw new ClientException(&quot;SDK.UnsupportedEncoding&quot;, &quot;Can not parse response due to unsupported encoding.&quot;);</span>
+<span class="fc" id="L230">            }</span>
+        }
+
+<span class="fc" id="L233">        return stringContent;</span>
+    }
+
+
+    public String getSysUrl() {
+<span class="fc" id="L238">        return url;</span>
+    }
+
+    protected void setSysUrl(String url) {
+<span class="fc" id="L242">        this.url = url;</span>
+<span class="fc" id="L243">    }</span>
+
+    public MethodType getSysMethod() {
+<span class="fc" id="L246">        return method;</span>
+    }
+
+    public void setSysMethod(MethodType method) {
+<span class="fc" id="L250">        this.method = method;</span>
+        //This is the pop rule and the put method accepts only json data
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (MethodType.PUT == method) {</span>
+<span class="fc" id="L253">            setHttpContentType(FormatType.JSON);</span>
+        }
+<span class="fc" id="L255">    }</span>
+
+    public String getSysEncoding() {
+<span class="fc" id="L258">        return encoding;</span>
+    }
+
+    public void setSysEncoding(String encoding) {
+<span class="fc" id="L262">        this.encoding = encoding;</span>
+<span class="fc" id="L263">    }</span>
+
+    public Integer getSysConnectTimeout() {
+<span class="fc" id="L266">        return connectTimeout;</span>
+    }
+
+    public void setSysConnectTimeout(Integer connectTimeout) {
+<span class="fc" id="L270">        this.connectTimeout = connectTimeout;</span>
+<span class="fc" id="L271">    }</span>
+
+    public Integer getSysReadTimeout() {
+<span class="fc" id="L274">        return readTimeout;</span>
+    }
+
+    public void setSysReadTimeout(Integer readTimeout) {
+<span class="fc" id="L278">        this.readTimeout = readTimeout;</span>
+<span class="fc" id="L279">    }</span>
+
+    public Map&lt;String, String&gt; getSysHeaders() {
+<span class="fc" id="L282">        return Collections.unmodifiableMap(headers);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

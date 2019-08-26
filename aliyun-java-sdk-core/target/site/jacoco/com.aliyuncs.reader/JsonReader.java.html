@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsonReader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.reader</a> &gt; <span class="el_source">JsonReader.java</span></div><h1>JsonReader.java</h1><pre class="source lang-java linenums">package com.aliyuncs.reader;
+
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.HashMap;
+import java.util.Map;
+
+@Deprecated
+<span class="fc" id="L9">public class JsonReader implements Reader {</span>
+
+<span class="fc" id="L11">    private static final Object ARRAY_END_TOKEN = new Object();</span>
+<span class="fc" id="L12">    private static final Object OBJECT_END_TOKEN = new Object();</span>
+<span class="fc" id="L13">    private static final Object COMMA_TOKEN = new Object();</span>
+<span class="fc" id="L14">    private static final Object COLON_TOKEN = new Object();</span>
+
+    private static final int FIRST_POSITION = 0;
+    private static final int CURRENT_POSITION = 1;
+    private static final int NEXT_POSITION = 2;
+<span class="fc" id="L19">    private static Map&lt;Character, Character&gt; escapes = new HashMap&lt;Character, Character&gt;();</span>
+
+    static {
+<span class="fc" id="L22">        escapes.put(Character.valueOf('\\'), Character.valueOf('\\'));</span>
+<span class="fc" id="L23">        escapes.put(Character.valueOf('/'), Character.valueOf('/'));</span>
+<span class="fc" id="L24">        escapes.put(Character.valueOf('&quot;'), Character.valueOf('&quot;'));</span>
+<span class="fc" id="L25">        escapes.put(Character.valueOf('t'), Character.valueOf('\t'));</span>
+<span class="fc" id="L26">        escapes.put(Character.valueOf('n'), Character.valueOf('\n'));</span>
+<span class="fc" id="L27">        escapes.put(Character.valueOf('r'), Character.valueOf('\r'));</span>
+<span class="fc" id="L28">        escapes.put(Character.valueOf('b'), Character.valueOf('\b'));</span>
+<span class="fc" id="L29">        escapes.put(Character.valueOf('f'), Character.valueOf('\f'));</span>
+<span class="fc" id="L30">    }</span>
+
+    private CharacterIterator ct;
+    private char c;
+    private Object token;
+<span class="fc" id="L35">    private StringBuffer stringBuffer = new StringBuffer();</span>
+<span class="fc" id="L36">    private Map&lt;String, String&gt; map = new HashMap&lt;String, String&gt;();</span>
+
+    public static String trimFromLast(String str, String stripString) {
+<span class="fc" id="L39">        int pos = str.lastIndexOf(stripString);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (pos &gt; -1) {</span>
+<span class="fc" id="L41">            return str.substring(0, pos);</span>
+        } else {
+<span class="fc" id="L43">            return str;</span>
+        }
+    }
+
+    @Override
+    public Map&lt;String, String&gt; read(String response, String endpoint) {
+<span class="fc" id="L49">        return read(new StringCharacterIterator(response), endpoint, FIRST_POSITION);</span>
+    }
+
+    @Override
+    public Map&lt;String, String&gt; readForHideArrayItem(String response, String endpoint) {
+<span class="fc" id="L54">        return readForHideItem(new StringCharacterIterator(response), endpoint, FIRST_POSITION);</span>
+    }
+
+    public Map&lt;String, String&gt; read(CharacterIterator ci, String endpoint, int start) {
+<span class="fc" id="L58">        ct = ci;</span>
+<span class="fc bfc" id="L59" title="All 4 branches covered.">        switch (start) {</span>
+            case FIRST_POSITION:
+<span class="fc" id="L61">                c = ct.first();</span>
+<span class="fc" id="L62">                break;</span>
+            case CURRENT_POSITION:
+<span class="fc" id="L64">                c = ct.current();</span>
+<span class="fc" id="L65">                break;</span>
+            case NEXT_POSITION:
+<span class="fc" id="L67">                c = ct.next();</span>
+<span class="fc" id="L68">                break;</span>
+            default:
+                break;
+        }
+<span class="fc" id="L72">        readJson(endpoint);</span>
+<span class="fc" id="L73">        return map;</span>
+    }
+
+    public Map&lt;String, String&gt; readForHideItem(CharacterIterator ci, String endpoint, int start) {
+<span class="fc" id="L77">        ct = ci;</span>
+<span class="fc bfc" id="L78" title="All 4 branches covered.">        switch (start) {</span>
+            case FIRST_POSITION:
+<span class="fc" id="L80">                c = ct.first();</span>
+<span class="fc" id="L81">                break;</span>
+            case CURRENT_POSITION:
+<span class="fc" id="L83">                c = ct.current();</span>
+<span class="fc" id="L84">                break;</span>
+            case NEXT_POSITION:
+<span class="fc" id="L86">                c = ct.next();</span>
+                break;
+        }
+<span class="fc" id="L89">        readJsonForHideItem(endpoint);</span>
+<span class="fc" id="L90">        return map;</span>
+    }
+
+    private Object readJson(String baseKey) {
+<span class="fc" id="L94">        skipWhiteSpace();</span>
+<span class="fc" id="L95">        char ch = c;</span>
+<span class="fc" id="L96">        nextChar();</span>
+<span class="fc bfc" id="L97" title="All 11 branches covered.">        switch (ch) {</span>
+            case '{':
+<span class="fc" id="L99">                processObject(baseKey);</span>
+<span class="fc" id="L100">                break;</span>
+            case '}':
+<span class="fc" id="L102">                token = OBJECT_END_TOKEN;</span>
+<span class="fc" id="L103">                break;</span>
+            case '[':
+<span class="fc bfc" id="L105" title="All 2 branches covered.">                if (c == '&quot;') {</span>
+<span class="fc" id="L106">                    processList(baseKey);</span>
+<span class="fc" id="L107">                    break;</span>
+                } else {
+<span class="fc" id="L109">                    processArray(baseKey);</span>
+<span class="fc" id="L110">                    break;</span>
+                }
+            case ']':
+<span class="fc" id="L113">                token = ARRAY_END_TOKEN;</span>
+<span class="fc" id="L114">                break;</span>
+            case '&quot;':
+<span class="fc" id="L116">                token = processString();</span>
+<span class="fc" id="L117">                break;</span>
+            case ',':
+<span class="fc" id="L119">                token = COMMA_TOKEN;</span>
+<span class="fc" id="L120">                break;</span>
+            case ':':
+<span class="fc" id="L122">                token = COLON_TOKEN;</span>
+<span class="fc" id="L123">                break;</span>
+            case 't':
+<span class="fc" id="L125">                nextChar();</span>
+<span class="fc" id="L126">                nextChar();</span>
+<span class="fc" id="L127">                nextChar();</span>
+<span class="fc" id="L128">                token = Boolean.TRUE;</span>
+<span class="fc" id="L129">                break;</span>
+            case 'n':
+<span class="fc" id="L131">                nextChar();</span>
+<span class="fc" id="L132">                nextChar();</span>
+<span class="fc" id="L133">                nextChar();</span>
+<span class="fc" id="L134">                token = null;</span>
+<span class="fc" id="L135">                break;</span>
+            case 'f':
+<span class="fc" id="L137">                nextChar();</span>
+<span class="fc" id="L138">                nextChar();</span>
+<span class="fc" id="L139">                nextChar();</span>
+<span class="fc" id="L140">                nextChar();</span>
+<span class="fc" id="L141">                token = Boolean.FALSE;</span>
+<span class="fc" id="L142">                break;</span>
+            default:
+<span class="fc" id="L144">                c = ct.previous();</span>
+<span class="fc bfc" id="L145" title="All 4 branches covered.">                if (Character.isDigit(c) || c == '-') {</span>
+<span class="fc" id="L146">                    token = processNumber();</span>
+                }
+        }
+<span class="fc" id="L149">        return token;</span>
+    }
+
+    private Object readJsonForHideItem(String baseKey) {
+<span class="fc" id="L153">        skipWhiteSpace();</span>
+<span class="fc" id="L154">        char ch = c;</span>
+<span class="fc" id="L155">        nextChar();</span>
+<span class="fc bfc" id="L156" title="All 11 branches covered.">        switch (ch) {</span>
+            case '{':
+<span class="fc" id="L158">                processObjectForHideItemName(baseKey);</span>
+<span class="fc" id="L159">                break;</span>
+            case '}':
+<span class="fc" id="L161">                token = OBJECT_END_TOKEN;</span>
+<span class="fc" id="L162">                break;</span>
+            case '[':
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                if (c == '&quot;') {</span>
+<span class="fc" id="L165">                    processListForHideItem(baseKey);</span>
+<span class="fc" id="L166">                    break;</span>
+                } else {
+<span class="fc" id="L168">                    processArrayForHideItem(baseKey);</span>
+<span class="fc" id="L169">                    break;</span>
+                }
+            case ']':
+<span class="fc" id="L172">                token = ARRAY_END_TOKEN;</span>
+<span class="fc" id="L173">                break;</span>
+            case '&quot;':
+<span class="fc" id="L175">                token = processString();</span>
+<span class="fc" id="L176">                break;</span>
+            case ',':
+<span class="fc" id="L178">                token = COMMA_TOKEN;</span>
+<span class="fc" id="L179">                break;</span>
+            case ':':
+<span class="fc" id="L181">                token = COLON_TOKEN;</span>
+<span class="fc" id="L182">                break;</span>
+            case 't':
+<span class="fc" id="L184">                nextChar();</span>
+<span class="fc" id="L185">                nextChar();</span>
+<span class="fc" id="L186">                nextChar();</span>
+<span class="fc" id="L187">                token = Boolean.TRUE;</span>
+<span class="fc" id="L188">                break;</span>
+            case 'n':
+<span class="fc" id="L190">                nextChar();</span>
+<span class="fc" id="L191">                nextChar();</span>
+<span class="fc" id="L192">                nextChar();</span>
+<span class="fc" id="L193">                token = null;</span>
+<span class="fc" id="L194">                break;</span>
+            case 'f':
+<span class="fc" id="L196">                nextChar();</span>
+<span class="fc" id="L197">                nextChar();</span>
+<span class="fc" id="L198">                nextChar();</span>
+<span class="fc" id="L199">                nextChar();</span>
+<span class="fc" id="L200">                token = Boolean.FALSE;</span>
+<span class="fc" id="L201">                break;</span>
+            default:
+<span class="fc" id="L203">                c = ct.previous();</span>
+<span class="fc bfc" id="L204" title="All 4 branches covered.">                if (Character.isDigit(c) || c == '-') {</span>
+<span class="fc" id="L205">                    token = processNumber();</span>
+                }
+        }
+<span class="fc" id="L208">        return token;</span>
+    }
+
+    private void processObject(String baseKey) {
+<span class="fc" id="L212">        String key = baseKey + &quot;.&quot; + readJson(baseKey);</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        while (token != OBJECT_END_TOKEN) {</span>
+<span class="fc" id="L214">            readJson(key);</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">            if (token != OBJECT_END_TOKEN) {</span>
+<span class="fc" id="L216">                Object object = readJson(key);</span>
+<span class="pc bpc" id="L217" title="2 of 6 branches missed.">                if (object instanceof String || object instanceof Number || object instanceof Boolean) {</span>
+<span class="fc" id="L218">                    map.put(key, String.valueOf(object));</span>
+                }
+
+<span class="fc bfc" id="L221" title="All 2 branches covered.">                if (readJson(key) == COMMA_TOKEN) {</span>
+<span class="fc" id="L222">                    key = String.valueOf(readJson(key));</span>
+<span class="fc" id="L223">                    key = baseKey + &quot;.&quot; + key;</span>
+                }
+<span class="fc" id="L225">            }</span>
+        }
+<span class="fc" id="L227">    }</span>
+
+    private void processObjectForHideItemName(String baseKey) {
+<span class="fc" id="L230">        String key = baseKey + &quot;.&quot; + readJsonForHideItem(baseKey);</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        while (token != OBJECT_END_TOKEN) {</span>
+<span class="fc" id="L232">            readJsonForHideItem(key);</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            if (token != OBJECT_END_TOKEN) {</span>
+<span class="fc" id="L234">                Object object = readJsonForHideItem(key);</span>
+<span class="pc bpc" id="L235" title="2 of 6 branches missed.">                if (object instanceof String || object instanceof Number || object instanceof Boolean) {</span>
+<span class="fc" id="L236">                    map.put(key, String.valueOf(object));</span>
+                }
+
+<span class="fc bfc" id="L239" title="All 2 branches covered.">                if (readJson(key) == COMMA_TOKEN) {</span>
+<span class="fc" id="L240">                    key = String.valueOf(readJson(key));</span>
+<span class="fc" id="L241">                    key = baseKey + &quot;.&quot; + key;</span>
+                }
+<span class="fc" id="L243">            }</span>
+        }
+<span class="fc" id="L245">    }</span>
+
+    private void processList(String baseKey) {
+<span class="fc" id="L248">        Object value = readJson(baseKey);</span>
+<span class="fc" id="L249">        int index = 0;</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        while (token != ARRAY_END_TOKEN) {</span>
+<span class="fc" id="L251">            String key = trimFromLast(baseKey, &quot;.&quot;) + &quot;[&quot; + (index++) + &quot;]&quot;;</span>
+<span class="fc" id="L252">            map.put(key, String.valueOf(value));</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">            if (readJson(baseKey) == COMMA_TOKEN) {</span>
+<span class="fc" id="L254">                value = readJson(baseKey);</span>
+            }
+<span class="fc" id="L256">        }</span>
+<span class="fc" id="L257">        map.put(trimFromLast(baseKey, &quot;.&quot;) + &quot;.Length&quot;, String.valueOf(index));</span>
+<span class="fc" id="L258">    }</span>
+
+    private void processListForHideItem(String baseKey) {
+<span class="fc" id="L261">        Object value = readJsonForHideItem(baseKey);</span>
+<span class="fc" id="L262">        int index = 0;</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        while (token != ARRAY_END_TOKEN) {</span>
+<span class="fc" id="L264">            String key = baseKey + &quot;[&quot; + (index++) + &quot;]&quot;;</span>
+<span class="fc" id="L265">            map.put(key, String.valueOf(value));</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            if (readJsonForHideItem(baseKey) == COMMA_TOKEN) {</span>
+<span class="fc" id="L267">                value = readJsonForHideItem(baseKey);</span>
+            }
+<span class="fc" id="L269">        }</span>
+<span class="fc" id="L270">        map.put(baseKey + &quot;.Length&quot;, String.valueOf(index));</span>
+<span class="fc" id="L271">    }</span>
+
+    private void processArray(String baseKey) {
+<span class="fc" id="L274">        int index = 0;</span>
+<span class="fc" id="L275">        String preKey = baseKey.substring(0, baseKey.lastIndexOf(&quot;.&quot;));</span>
+<span class="fc" id="L276">        String key = preKey + &quot;[&quot; + index + &quot;]&quot;;</span>
+<span class="fc" id="L277">        Object value = readJson(key);</span>
+
+<span class="fc bfc" id="L279" title="All 2 branches covered.">        while (token != ARRAY_END_TOKEN) {</span>
+<span class="fc" id="L280">            map.put(preKey + &quot;.Length&quot;, String.valueOf(index + 1));</span>
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">            if (value instanceof String) {</span>
+<span class="nc" id="L282">                map.put(key, String.valueOf(value));</span>
+            }
+<span class="fc bfc" id="L284" title="All 2 branches covered.">            if (readJson(baseKey) == COMMA_TOKEN) {</span>
+<span class="fc" id="L285">                key = preKey + &quot;[&quot; + (++index) + &quot;]&quot;;</span>
+<span class="fc" id="L286">                value = readJson(key);</span>
+            }
+        }
+<span class="fc" id="L289">    }</span>
+
+    private void processArrayForHideItem(String baseKey) {
+<span class="fc" id="L292">        int index = 0;</span>
+<span class="fc" id="L293">        String preKey = baseKey;</span>
+<span class="fc" id="L294">        String key = preKey + &quot;[&quot; + index + &quot;]&quot;;</span>
+<span class="fc" id="L295">        Object value = readJsonForHideItem(key);</span>
+
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">        while (token != ARRAY_END_TOKEN) {</span>
+<span class="nc" id="L298">            map.put(preKey + &quot;.Length&quot;, String.valueOf(index + 1));</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">            if (value instanceof String) {</span>
+<span class="nc" id="L300">                map.put(key, String.valueOf(value));</span>
+            }
+<span class="nc bnc" id="L302" title="All 2 branches missed.">            if (readJsonForHideItem(baseKey) == COMMA_TOKEN) {</span>
+<span class="nc" id="L303">                key = preKey + &quot;[&quot; + (++index) + &quot;]&quot;;</span>
+<span class="nc" id="L304">                value = readJsonForHideItem(key);</span>
+            }
+        }
+<span class="fc" id="L307">    }</span>
+
+    private Object processNumber() {
+<span class="fc" id="L310">        stringBuffer.setLength(0);</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">        if ('-' == c) {</span>
+<span class="fc" id="L312">            addChar();</span>
+        }
+<span class="fc" id="L314">        addDigits();</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">        if ('.' == c) {</span>
+<span class="fc" id="L316">            addChar();</span>
+<span class="fc" id="L317">            addDigits();</span>
+        }
+<span class="fc bfc" id="L319" title="All 4 branches covered.">        if ('e' == c || 'E' == c) {</span>
+<span class="fc" id="L320">            addChar();</span>
+<span class="pc bpc" id="L321" title="1 of 4 branches missed.">            if ('+' == c || '-' == c) {</span>
+<span class="fc" id="L322">                addChar();</span>
+            }
+<span class="fc" id="L324">            addDigits();</span>
+        }
+<span class="fc" id="L326">        return stringBuffer.toString();</span>
+    }
+
+    private void addDigits() {
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        while (Character.isDigit(c)) {</span>
+<span class="fc" id="L331">            addChar();</span>
+        }
+<span class="fc" id="L333">    }</span>
+
+    private void skipWhiteSpace() {
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        while (Character.isWhitespace(c)) {</span>
+<span class="fc" id="L337">            nextChar();</span>
+        }
+<span class="fc" id="L339">    }</span>
+
+    private char nextChar() {
+<span class="fc" id="L342">        c = ct.next();</span>
+<span class="fc" id="L343">        return c;</span>
+    }
+
+    private Object processString() {
+<span class="fc" id="L347">        stringBuffer.setLength(0);</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">        while (c != '&quot;') {</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">            if (c == '\\') {</span>
+<span class="fc" id="L350">                nextChar();</span>
+<span class="fc" id="L351">                Object value = escapes.get(Character.valueOf(c));</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">                if (value != null) {</span>
+<span class="fc" id="L353">                    addChar(((Character) value).charValue());</span>
+                }
+<span class="fc" id="L355">            } else {</span>
+<span class="fc" id="L356">                addChar();</span>
+            }
+        }
+<span class="fc" id="L359">        nextChar();</span>
+<span class="fc" id="L360">        return stringBuffer.toString();</span>
+    }
+
+    private void addChar(char ch) {
+<span class="fc" id="L364">        stringBuffer.append(ch);</span>
+<span class="fc" id="L365">        nextChar();</span>
+<span class="fc" id="L366">    }</span>
+
+    private void addChar() {
+<span class="fc" id="L369">        addChar(c);</span>
+<span class="fc" id="L370">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EndpointResolverRules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.endpoint</a> &gt; <span class="el_source">EndpointResolverRules.java</span></div><h1>EndpointResolverRules.java</h1><pre class="source lang-java linenums">package com.aliyuncs.endpoint;
+
+import java.util.Iterator;
+import java.util.HashMap;
+
+<span class="fc" id="L6">public class EndpointResolverRules extends EndpointResolverBase {</span>
+<span class="fc" id="L7">    private Boolean validRegionId = false;</span>
+<span class="fc" id="L8">    private Boolean validProductId = false;</span>
+<span class="fc" id="L9">    private HashMap&lt;String, String&gt; productEndpointMap = null;</span>
+<span class="fc" id="L10">    private String productEndpointRegional = null;</span>
+<span class="fc" id="L11">    private String productNetwork = &quot;public&quot;;</span>
+<span class="fc" id="L12">    private String productSuffix = &quot;&quot;;</span>
+
+    @Override
+    public String resolve(ResolveEndpointRequest request) {
+<span class="fc" id="L16">        this.productEndpointMap = request.productEndpointMap;</span>
+<span class="fc" id="L17">        this.productEndpointRegional = request.productEndpointRegional;</span>
+<span class="fc" id="L18">        this.productNetwork = request.productNetwork;</span>
+<span class="fc" id="L19">        this.productSuffix = request.productSuffix;</span>
+<span class="pc bpc" id="L20" title="1 of 4 branches missed.">        if (this.productEndpointMap == null || this.productEndpointRegional == null) {</span>
+<span class="fc" id="L21">            return null;</span>
+        }
+<span class="fc" id="L23">        return getEndpoint(request.productCode, request.regionId);</span>
+    }
+
+    @Override
+    public String makeEndpointKey(ResolveEndpointRequest request) {
+<span class="nc" id="L28">        return makeEndpointKey(request.productCode, request.regionId);</span>
+    }
+
+    public String makeEndpointKey(String productCode, String regionId) {
+<span class="nc" id="L32">        return productCode.toLowerCase() + &quot;.&quot; + regionId.toLowerCase();</span>
+    }
+
+    private String getEndpoint(String productCode, String regionId) {
+<span class="pc bpc" id="L36" title="2 of 4 branches missed.">        if (this.productEndpointRegional != null &amp;&amp; this.productEndpointMap != null) {</span>
+<span class="pc bpc" id="L37" title="2 of 4 branches missed.">            if (&quot;&quot;.equals(this.productNetwork) || this.productNetwork == null) {</span>
+<span class="nc" id="L38">                this.productNetwork = &quot;public&quot;;</span>
+            }
+            
+<span class="fc bfc" id="L41" title="All 2 branches covered.">            if (&quot;public&quot;.equals(this.productNetwork)) {</span>
+<span class="fc" id="L42">                Iterator&lt;HashMap.Entry&lt;String, String&gt;&gt; entries = this.productEndpointMap.entrySet().iterator();</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">                while (entries.hasNext()) {</span>
+<span class="fc" id="L44">                    HashMap.Entry&lt;String, String&gt; entry = entries.next();</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">                    if (entry.getKey() == regionId) {</span>
+<span class="fc" id="L46">                        return entry.getValue();</span>
+                    }
+<span class="fc" id="L48">                }</span>
+            }
+
+<span class="fc" id="L51">            String endpoint = &quot;&quot;;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if (this.productEndpointRegional.equals(&quot;regional&quot;)) {</span>
+<span class="fc" id="L53">                endpoint = &quot;&lt;product_id&gt;&lt;suffix&gt;&lt;network&gt;.&lt;region_id&gt;.aliyuncs.com&quot;;</span>
+<span class="fc" id="L54">                endpoint = endpoint.replace(&quot;&lt;region_id&gt;&quot;, regionId.toLowerCase());</span>
+            } else {
+<span class="fc" id="L56">                endpoint = &quot;&lt;product_id&gt;&lt;suffix&gt;&lt;network&gt;.aliyuncs.com&quot;;</span>
+            }
+<span class="pc bpc" id="L58" title="2 of 4 branches missed.">            if (this.productSuffix == null || this.productSuffix.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L59">                endpoint = endpoint.replace(&quot;&lt;suffix&gt;&quot;, &quot;&quot;);</span>
+            } else {
+<span class="nc" id="L61">                endpoint = endpoint.replace(&quot;&lt;suffix&gt;&quot;, &quot;-&quot; + this.productSuffix.toLowerCase());</span>
+            }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (&quot;public&quot;.equals(this.productNetwork)) {</span>
+<span class="fc" id="L64">                endpoint = endpoint.replace(&quot;&lt;network&gt;&quot;, &quot;&quot;);</span>
+            } else {
+<span class="fc" id="L66">                endpoint = endpoint.replace(&quot;&lt;network&gt;&quot;, &quot;-&quot; + this.productNetwork.toLowerCase());</span>
+            }
+
+<span class="fc" id="L69">            endpoint = endpoint.replace(&quot;&lt;product_id&gt;&quot;, productCode.toLowerCase());</span>
+<span class="fc" id="L70">            this.validRegionId = true;</span>
+<span class="fc" id="L71">            this.validProductId = true;</span>
+<span class="fc" id="L72">            return endpoint;</span>
+        }
+<span class="nc" id="L74">        return null;</span>
+
+    }
+
+    @Override
+    public boolean isProductCodeValid(ResolveEndpointRequest request) {
+<span class="nc" id="L80">        return this.validProductId;</span>
+    }
+
+    @Override
+    public boolean isRegionIdValid(ResolveEndpointRequest request) {
+<span class="nc" id="L85">        return this.validRegionId;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

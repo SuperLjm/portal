@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IHttpClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.http</a> &gt; <span class="el_source">IHttpClient.java</span></div><h1>IHttpClient.java</h1><pre class="source lang-java linenums">package com.aliyuncs.http;
+
+import com.aliyuncs.exceptions.ClientException;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.concurrent.Future;
+
+public abstract class IHttpClient implements Closeable {
+
+    protected HttpClientConfig clientConfig;
+
+<span class="fc" id="L13">    public IHttpClient(HttpClientConfig clientConfig) throws ClientException {</span>
+<span class="fc bfc" id="L14" title="All 2 branches covered.">        if (clientConfig == null) {</span>
+<span class="fc" id="L15">            clientConfig = HttpClientConfig.getDefault();</span>
+        }
+<span class="fc" id="L17">        this.clientConfig = clientConfig;</span>
+<span class="fc" id="L18">        init(clientConfig);</span>
+
+<span class="fc" id="L20">    }</span>
+
+<span class="fc" id="L22">    public IHttpClient() {</span>
+        // do nothing
+<span class="fc" id="L24">    }</span>
+
+    protected abstract void init(HttpClientConfig clientConfig) throws ClientException;
+
+    public abstract HttpResponse syncInvoke(HttpRequest apiRequest) throws IOException, ClientException;
+
+    public abstract Future&lt;HttpResponse&gt; asyncInvoke(final HttpRequest apiRequest, final CallBack callback)
+            throws IOException;
+
+    @Deprecated
+    public abstract void ignoreSSLCertificate();
+
+    @Deprecated
+    public abstract void restoreSSLCertificate();
+
+    public abstract boolean isSingleton();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

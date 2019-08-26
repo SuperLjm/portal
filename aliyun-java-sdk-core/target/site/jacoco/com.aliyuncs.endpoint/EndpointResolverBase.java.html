@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EndpointResolverBase.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.endpoint</a> &gt; <span class="el_source">EndpointResolverBase.java</span></div><h1>EndpointResolverBase.java</h1><pre class="source lang-java linenums">package com.aliyuncs.endpoint;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+public abstract class EndpointResolverBase implements EndpointResolver {
+    Map&lt;String, String&gt; endpointsData;
+
+<span class="fc" id="L10">    public EndpointResolverBase() {</span>
+<span class="fc" id="L11">        endpointsData = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L12">    }</span>
+
+    public String fetchEndpointEntry(ResolveEndpointRequest request) {
+<span class="fc" id="L15">        String key = makeEndpointKey(request);</span>
+<span class="fc bfc" id="L16" title="All 2 branches covered.">        if (endpointsData.containsKey(key)) {</span>
+<span class="fc" id="L17">            return endpointsData.get(key);</span>
+        } else {
+<span class="fc" id="L19">            return null;</span>
+        }
+    }
+
+    public void putEndpointEntry(String key, String endpoint) {
+<span class="fc" id="L24">        endpointsData.put(key, endpoint);</span>
+<span class="fc" id="L25">    }</span>
+
+    public boolean isProductCodeValid(ResolveEndpointRequest request) {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        for (String key : endpointsData.keySet()) {</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">            if (key.startsWith(request.productCodeLower)) {</span>
+<span class="fc" id="L30">                return true;</span>
+            }
+<span class="fc" id="L32">        }</span>
+<span class="fc" id="L33">        return false;</span>
+    }
+
+    abstract public boolean isRegionIdValid(ResolveEndpointRequest request);
+
+    abstract String makeEndpointKey(ResolveEndpointRequest request);
+
+    public Set&lt;String&gt; getValidRegionIdsByProduct(String productCode) {
+        // Only local config can tell
+<span class="fc" id="L42">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

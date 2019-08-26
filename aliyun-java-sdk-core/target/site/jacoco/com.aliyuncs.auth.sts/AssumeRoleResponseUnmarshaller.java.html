@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssumeRoleResponseUnmarshaller.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.auth.sts</a> &gt; <span class="el_source">AssumeRoleResponseUnmarshaller.java</span></div><h1>AssumeRoleResponseUnmarshaller.java</h1><pre class="source lang-java linenums">package com.aliyuncs.auth.sts;
+
+import com.aliyuncs.auth.sts.AssumeRoleResponse.AssumedRoleUser;
+import com.aliyuncs.auth.sts.AssumeRoleResponse.Credentials;
+import com.aliyuncs.transform.UnmarshallerContext;
+
+
+<span class="fc" id="L8">public class AssumeRoleResponseUnmarshaller {</span>
+
+    public static AssumeRoleResponse unmarshall(AssumeRoleResponse assumeRoleResponse, UnmarshallerContext context) {
+
+<span class="fc" id="L12">        assumeRoleResponse.setRequestId(context.stringValue(&quot;AssumeRoleResponse.RequestId&quot;));</span>
+
+<span class="fc" id="L14">        Credentials credentials = new Credentials();</span>
+<span class="fc" id="L15">        credentials.setSecurityToken(context.stringValue(&quot;AssumeRoleResponse.Credentials.SecurityToken&quot;));</span>
+<span class="fc" id="L16">        credentials.setAccessKeySecret(context.stringValue(&quot;AssumeRoleResponse.Credentials.AccessKeySecret&quot;));</span>
+<span class="fc" id="L17">        credentials.setAccessKeyId(context.stringValue(&quot;AssumeRoleResponse.Credentials.AccessKeyId&quot;));</span>
+<span class="fc" id="L18">        credentials.setExpiration(context.stringValue(&quot;AssumeRoleResponse.Credentials.Expiration&quot;));</span>
+<span class="fc" id="L19">        assumeRoleResponse.setCredentials(credentials);</span>
+
+<span class="fc" id="L21">        AssumedRoleUser assumedRoleUser = new AssumedRoleUser();</span>
+<span class="fc" id="L22">        assumedRoleUser.setArn(context.stringValue(&quot;AssumeRoleResponse.AssumedRoleUser.Arn&quot;));</span>
+<span class="fc" id="L23">        assumedRoleUser.setAssumedRoleId(context.stringValue(&quot;AssumeRoleResponse.AssumedRoleUser.AssumedRoleId&quot;));</span>
+<span class="fc" id="L24">        assumeRoleResponse.setAssumedRoleUser(assumedRoleUser);</span>
+
+<span class="fc" id="L26">        return assumeRoleResponse;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

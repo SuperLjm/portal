@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AcsRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs</a> &gt; <span class="el_source">AcsRequest.java</span></div><h1>AcsRequest.java</h1><pre class="source lang-java linenums">package com.aliyuncs;
+
+import com.aliyuncs.auth.*;
+import com.aliyuncs.http.FormatType;
+import com.aliyuncs.http.HttpRequest;
+import com.aliyuncs.http.ProtocolType;
+import com.aliyuncs.http.UserAgentConfig;
+import com.aliyuncs.regions.ProductDomain;
+
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+@SuppressWarnings(&quot;deprecation&quot;)
+public abstract class AcsRequest&lt;T extends AcsResponse&gt; extends HttpRequest {
+
+<span class="fc" id="L21">    private final Map&lt;String, String&gt; queryParameters = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L22">    private final Map&lt;String, String&gt; domainParameters = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L23">    private final Map&lt;String, String&gt; bodyParameters = new HashMap&lt;String, String&gt;();</span>
+    private UserAgentConfig userAgentConfig;
+<span class="fc" id="L25">    protected ISignatureComposer composer = null;</span>
+<span class="fc" id="L26">    private String version = null;</span>
+<span class="fc" id="L27">    private String product = null;</span>
+<span class="fc" id="L28">    private String actionName = null;</span>
+<span class="fc" id="L29">    private String regionId = null;</span>
+<span class="fc" id="L30">    private String securityToken = null;</span>
+<span class="fc" id="L31">    private FormatType acceptFormat = null;</span>
+<span class="fc" id="L32">    private ProtocolType protocol = null;</span>
+    private String locationProduct;
+    private String endpointType;
+<span class="fc" id="L35">    private ProductDomain productDomain = null;</span>
+    protected String strToSign;
+<span class="fc" id="L37">    public HashMap&lt;String, String&gt; productEndpointMap = null;</span>
+<span class="fc" id="L38">    public String productEndpointRegional = null;</span>
+<span class="fc" id="L39">    public String productNetwork = &quot;public&quot;;</span>
+<span class="fc" id="L40">    public String productSuffix = &quot;&quot;;</span>
+
+    public AcsRequest(String product) {
+<span class="fc" id="L43">        super(null);</span>
+<span class="fc" id="L44">        this.headers.put(&quot;x-sdk-client&quot;, &quot;Java/2.0.0&quot;);</span>
+<span class="fc" id="L45">        this.headers.put(&quot;x-sdk-invoke-type&quot;, &quot;normal&quot;);</span>
+<span class="fc" id="L46">        this.product = product;</span>
+<span class="fc" id="L47">    }</span>
+
+    public static String concatQueryString(Map&lt;String, String&gt; parameters) throws UnsupportedEncodingException {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (null == parameters) {</span>
+<span class="fc" id="L51">            return null;</span>
+        }
+
+<span class="fc" id="L54">        StringBuilder urlBuilder = new StringBuilder(&quot;&quot;);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        for (Entry&lt;String, String&gt; entry : parameters.entrySet()) {</span>
+<span class="fc" id="L56">            String key = entry.getKey();</span>
+<span class="fc" id="L57">            String val = entry.getValue();</span>
+<span class="fc" id="L58">            urlBuilder.append(AcsURLEncoder.encode(key));</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">            if (val != null) {</span>
+<span class="fc" id="L60">                urlBuilder.append(&quot;=&quot;).append(AcsURLEncoder.encode(val));</span>
+            }
+<span class="fc" id="L62">            urlBuilder.append(&quot;&amp;&quot;);</span>
+<span class="fc" id="L63">        }</span>
+
+<span class="fc" id="L65">        int strIndex = urlBuilder.length();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (parameters.size() &gt; 0) {</span>
+<span class="fc" id="L67">            urlBuilder.deleteCharAt(strIndex - 1);</span>
+        }
+
+<span class="fc" id="L70">        return urlBuilder.toString();</span>
+    }
+
+    /**
+     * @deprecated : Use setSysEndpoint instead of this
+     */
+    @Deprecated
+    public void setEndpoint(String endpoint) {
+<span class="fc" id="L78">        ProductDomain productDomain = new ProductDomain(product, endpoint);</span>
+<span class="fc" id="L79">        setProductDomain(productDomain);</span>
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * @deprecated : Use getSysVersion instead of this
+     */
+    @Deprecated
+    public String getVersion() {
+<span class="fc" id="L87">        return version;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysVersion instead of this
+     */
+    @Deprecated
+    public void setVersion(String version) {
+<span class="fc" id="L95">        this.version = version;</span>
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * @deprecated : Use getSysProduct instead of this
+     */
+    @Deprecated
+    public String getProduct() {
+<span class="fc" id="L103">        return product;</span>
+    }
+
+    /**
+     * @deprecated : Use getSysActionName instead of this
+     */
+    @Deprecated
+    public String getActionName() {
+<span class="fc" id="L111">        return actionName;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysActionName instead of this
+     */
+    @Deprecated
+    public void setActionName(String actionName) {
+<span class="fc" id="L119">        this.actionName = actionName;</span>
+<span class="fc" id="L120">    }</span>
+
+    /**
+     * @deprecated : Use getSysRegionId instead of this
+     */
+    @Deprecated
+    public String getRegionId() {
+<span class="fc" id="L127">        return regionId;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysRegionId instead of this
+     */
+    @Deprecated
+    public void setRegionId(String regionId) {
+<span class="fc" id="L135">        this.regionId = regionId;</span>
+<span class="fc" id="L136">    }</span>
+
+    /**
+     * @deprecated : Use getSysSecurityToken instead of this
+     */
+    @Deprecated
+    public String getSecurityToken() {
+<span class="fc" id="L143">        return securityToken;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysSecurityToken instead of this
+     */
+    @Deprecated
+    public void setSecurityToken(String securityToken) {
+<span class="fc" id="L151">        this.securityToken = securityToken;</span>
+<span class="fc" id="L152">        putQueryParameter(&quot;SecurityToken&quot;, securityToken);</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * @deprecated : Use getSysAcceptFormat instead of this
+     */
+    @Deprecated
+    public FormatType getAcceptFormat() {
+<span class="fc" id="L160">        return acceptFormat;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysAcceptFormat instead of this
+     */
+    @Deprecated
+    public void setAcceptFormat(FormatType acceptFormat) {
+<span class="fc" id="L168">        this.acceptFormat = acceptFormat;</span>
+<span class="fc" id="L169">        this.putHeaderParameter(&quot;Accept&quot;, FormatType.mapFormatToAccept(acceptFormat));</span>
+<span class="fc" id="L170">    }</span>
+
+    /**
+     * @deprecated : Use getSysProtocol instead of this
+     */
+    @Deprecated
+    public ProtocolType getProtocol() {
+<span class="fc" id="L177">        return protocol;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysProtocol instead of this
+     */
+    @Deprecated
+    public void setProtocol(ProtocolType protocol) {
+<span class="fc" id="L185">        this.protocol = protocol;</span>
+<span class="fc" id="L186">    }</span>
+
+    /**
+     * @deprecated : Use getSysQueryParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getQueryParameters() {
+<span class="fc" id="L193">        return Collections.unmodifiableMap(queryParameters);</span>
+    }
+
+    public Map&lt;String, String&gt; getSysQueryParameters() {
+<span class="fc" id="L197">        return Collections.unmodifiableMap(queryParameters);</span>
+    }
+
+    public &lt;K&gt; void putQueryParameter(String name, K value) {
+<span class="fc" id="L201">        setParameter(this.queryParameters, name, value);</span>
+<span class="fc" id="L202">    }</span>
+
+    protected void putQueryParameter(String name, String value) {
+<span class="fc" id="L205">        setParameter(this.queryParameters, name, value);</span>
+<span class="fc" id="L206">    }</span>
+
+    /**
+     * @deprecated : Use getSysDomainParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getDomainParameters() {
+<span class="fc" id="L213">        return Collections.unmodifiableMap(domainParameters);</span>
+    }
+
+    public Map&lt;String, String&gt; getSysDomainParameters() {
+<span class="fc" id="L217">        return Collections.unmodifiableMap(domainParameters);</span>
+    }
+
+    protected void putDomainParameter(String name, Object value) {
+<span class="fc" id="L221">        setParameter(this.domainParameters, name, value);</span>
+<span class="fc" id="L222">    }</span>
+
+    /**
+     * @deprecated : Use getSysBodyParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getBodyParameters() {
+<span class="fc" id="L229">        return Collections.unmodifiableMap(bodyParameters);</span>
+    }
+
+    public Map&lt;String, String&gt; getSysBodyParameters() {
+<span class="fc" id="L233">        return Collections.unmodifiableMap(bodyParameters);</span>
+    }
+
+    protected void putDomainParameter(String name, String value) {
+<span class="fc" id="L237">        setParameter(this.domainParameters, name, value);</span>
+<span class="fc" id="L238">    }</span>
+
+    protected void putBodyParameter(String name, Object value) {
+<span class="fc" id="L241">        setParameter(this.bodyParameters, name, value);</span>
+<span class="fc" id="L242">    }</span>
+
+    protected void setParameter(Map&lt;String, String&gt; map, String name, Object value) {
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (null == map) {</span>
+<span class="fc" id="L246">            return;</span>
+        }
+<span class="fc" id="L248">        map.put(name, String.valueOf(value));</span>
+<span class="fc" id="L249">    }</span>
+
+    /**
+     * @deprecated : Use getSysLocationProduct instead of this
+     */
+    @Deprecated
+    public String getLocationProduct() {
+<span class="fc" id="L256">        return locationProduct;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysLocationProduct instead of this
+     */
+    @Deprecated
+    public void setLocationProduct(String locationProduct) {
+<span class="fc" id="L264">        this.locationProduct = locationProduct;</span>
+<span class="fc" id="L265">        putQueryParameter(&quot;ServiceCode&quot;, locationProduct);</span>
+<span class="fc" id="L266">    }</span>
+
+    /**
+     * @deprecated : Use getSysEndpointType instead of this
+     */
+    @Deprecated
+    public String getEndpointType() {
+<span class="fc" id="L273">        return endpointType;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysEndpointType instead of this
+     */
+    @Deprecated
+    public void setEndpointType(String endpointType) {
+<span class="fc" id="L281">        this.endpointType = endpointType;</span>
+<span class="fc" id="L282">        putQueryParameter(&quot;Type&quot;, endpointType);</span>
+<span class="fc" id="L283">    }</span>
+
+    /**
+     * @deprecated : Use getSysProductDomain instead of this
+     */
+    @Deprecated
+    public ProductDomain getProductDomain() {
+<span class="fc" id="L290">        return productDomain;</span>
+    }
+
+    /**
+     * @deprecated : Use setSysProductDomain instead of this
+     */
+    @Deprecated
+    public void setProductDomain(ProductDomain productDomain) {
+<span class="fc" id="L298">        this.productDomain = productDomain;</span>
+<span class="fc" id="L299">    }</span>
+
+    public abstract HttpRequest signRequest(Signer signer, AlibabaCloudCredentials credentials, FormatType format,
+            ProductDomain domain)
+            throws InvalidKeyException, IllegalStateException, UnsupportedEncodingException, NoSuchAlgorithmException;
+
+    public abstract String composeUrl(String endpoint, Map&lt;String, String&gt; queries) throws UnsupportedEncodingException;
+
+    public abstract Class&lt;T&gt; getResponseClass();
+
+    public String getSysVersion() {
+<span class="fc" id="L310">        return version;</span>
+    }
+
+    public void setSysVersion(String version) {
+<span class="fc" id="L314">        this.version = version;</span>
+<span class="fc" id="L315">    }</span>
+
+    public String getSysProduct() {
+<span class="fc" id="L318">        return product;</span>
+    }
+
+    public String getSysActionName() {
+<span class="fc" id="L322">        return actionName;</span>
+    }
+
+    public void setSysActionName(String actionName) {
+<span class="fc" id="L326">        this.actionName = actionName;</span>
+<span class="fc" id="L327">    }</span>
+
+    public String getSysRegionId() {
+<span class="fc" id="L330">        return regionId;</span>
+    }
+
+    public void setSysRegionId(String regionId) {
+<span class="fc" id="L334">        this.regionId = regionId;</span>
+<span class="fc" id="L335">    }</span>
+
+    public String getSysSecurityToken() {
+<span class="fc" id="L338">        return securityToken;</span>
+    }
+
+    public void setSysSecurityToken(String securityToken) {
+<span class="fc" id="L342">        this.securityToken = securityToken;</span>
+<span class="fc" id="L343">        putQueryParameter(&quot;SecurityToken&quot;, securityToken);</span>
+<span class="fc" id="L344">    }</span>
+
+    public FormatType getSysAcceptFormat() {
+<span class="fc" id="L347">        return acceptFormat;</span>
+    }
+
+    public void setSysAcceptFormat(FormatType acceptFormat) {
+<span class="fc" id="L351">        this.acceptFormat = acceptFormat;</span>
+<span class="fc" id="L352">        this.putHeaderParameter(&quot;Accept&quot;, FormatType.mapFormatToAccept(acceptFormat));</span>
+<span class="fc" id="L353">    }</span>
+
+    public ProtocolType getSysProtocol() {
+<span class="fc" id="L356">        return protocol;</span>
+    }
+
+    public void setSysProtocol(ProtocolType protocol) {
+<span class="fc" id="L360">        this.protocol = protocol;</span>
+<span class="fc" id="L361">    }</span>
+
+    public void setSysEndpoint(String endpoint) {
+<span class="fc" id="L364">        ProductDomain productDomain = new ProductDomain(product, endpoint);</span>
+<span class="fc" id="L365">        setSysProductDomain(productDomain);</span>
+<span class="fc" id="L366">    }</span>
+
+    public String getSysLocationProduct() {
+<span class="fc" id="L369">        return locationProduct;</span>
+    }
+
+    public void setSysLocationProduct(String locationProduct) {
+<span class="fc" id="L373">        this.locationProduct = locationProduct;</span>
+<span class="fc" id="L374">        putQueryParameter(&quot;ServiceCode&quot;, locationProduct);</span>
+<span class="fc" id="L375">    }</span>
+
+    public String getSysEndpointType() {
+<span class="fc" id="L378">        return endpointType;</span>
+    }
+
+    public void setSysEndpointType(String endpointType) {
+<span class="fc" id="L382">        this.endpointType = endpointType;</span>
+<span class="fc" id="L383">        putQueryParameter(&quot;Type&quot;, endpointType);</span>
+<span class="fc" id="L384">    }</span>
+
+    public ProductDomain getSysProductDomain() {
+<span class="fc" id="L387">        return productDomain;</span>
+    }
+
+    public void setSysProductDomain(ProductDomain productDomain) {
+<span class="fc" id="L391">        this.productDomain = productDomain;</span>
+<span class="fc" id="L392">    }</span>
+
+    public UserAgentConfig getSysUserAgentConfig() {
+<span class="fc" id="L395">        return userAgentConfig;</span>
+    }
+
+    public void appendUserAgent(String key, String value) {
+<span class="fc bfc" id="L399" title="All 2 branches covered.">        if (this.userAgentConfig == null) {</span>
+<span class="fc" id="L400">            this.userAgentConfig = new UserAgentConfig();</span>
+        }
+<span class="fc" id="L402">        this.userAgentConfig.append(key, value);</span>
+<span class="fc" id="L403">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
