@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlReader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.reader</a> &gt; <span class="el_source">XmlReader.java</span></div><h1>XmlReader.java</h1><pre class="source lang-java linenums">package com.aliyuncs.reader;
+
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.utils.XmlUtils;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Deprecated
+<span class="fc" id="L15">public class XmlReader implements Reader {</span>
+<span class="fc" id="L16">    Map&lt;String, String&gt; map = new HashMap&lt;String, String&gt;();</span>
+
+    @Override
+    public Map&lt;String, String&gt; read(String response, String endpoint) throws ClientException {
+        Element root;
+        try {
+<span class="fc" id="L22">            root = XmlUtils.getRootElementFromString(response);</span>
+<span class="fc" id="L23">            read(root, endpoint, false);</span>
+<span class="nc" id="L24">        } catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L25">            new ClientException(&quot;SDK.InvalidXMLParser&quot;, e.toString());</span>
+<span class="nc" id="L26">        } catch (SAXException e) {</span>
+<span class="nc" id="L27">            new ClientException(&quot;SDK.InvalidXMLFormat&quot;, e.toString());</span>
+<span class="nc" id="L28">        } catch (IOException e) {</span>
+<span class="nc" id="L29">            new ClientException(&quot;SDK.InvalidContent&quot;, e.toString());</span>
+<span class="pc" id="L30">        }</span>
+<span class="fc" id="L31">        return map;</span>
+    }
+
+    @Override
+    public Map&lt;String, String&gt; readForHideArrayItem(String response, String endpoint) throws ClientException {
+<span class="fc" id="L36">        return read(response, endpoint);</span>
+    }
+
+    private void read(Element element, String path, boolean appendPath) {
+<span class="fc" id="L40">        path = buildPath(element, path, appendPath);</span>
+<span class="fc" id="L41">        List&lt;Element&gt; childElements = XmlUtils.getChildElements(element);</span>
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (childElements.size() == 0) {</span>
+<span class="fc" id="L44">            map.put(path, element.getTextContent());</span>
+<span class="fc" id="L45">            return;</span>
+        }
+
+<span class="fc" id="L48">        List&lt;Element&gt; listElements = XmlUtils.getChildElements(element, childElements.get(0).getNodeName());</span>
+<span class="pc bpc" id="L49" title="1 of 4 branches missed.">        if (listElements.size() &gt; 1 &amp;&amp; childElements.size() == listElements.size()) {//be list</span>
+<span class="fc" id="L50">            elementsAsList(childElements, path);</span>
+<span class="pc bpc" id="L51" title="1 of 4 branches missed.">        } else if (listElements.size() == 1 &amp;&amp; childElements.size() == 1) {//may be list</span>
+<span class="fc" id="L52">            elementsAsList(listElements, path);//as list</span>
+<span class="fc" id="L53">            read(childElements.get(0), path, true);//as not list</span>
+        } else {//not list
+<span class="fc bfc" id="L55" title="All 2 branches covered.">            for (Element childElement : childElements) {</span>
+<span class="fc" id="L56">                read(childElement, path, true);</span>
+<span class="fc" id="L57">            }</span>
+        }
+<span class="fc" id="L59">    }</span>
+
+    private String buildPath(Element element, String path, boolean appendPath) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        return appendPath ? path + &quot;.&quot; + element.getNodeName() : path;</span>
+    }
+
+    private void elementsAsList(List&lt;Element&gt; listElements, String path) {
+<span class="fc" id="L66">        map.put(path + &quot;.Length&quot;, String.valueOf(listElements.size()));</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (int i = 0; i &lt; listElements.size(); i++) {</span>
+<span class="fc" id="L68">            read(listElements.get(i), path + &quot;[&quot; + i + &quot;]&quot;, false);</span>
+        }
+<span class="fc" id="L70">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

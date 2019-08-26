@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApacheHttpClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.http.clients</a> &gt; <span class="el_source">ApacheHttpClient.java</span></div><h1>ApacheHttpClient.java</h1><pre class="source lang-java linenums">package com.aliyuncs.http.clients;
+
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.http.*;
+import com.aliyuncs.utils.EnvironmentUtils;
+import com.aliyuncs.utils.IOUtils;
+import com.aliyuncs.utils.StringUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.EntityBuilder;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+
+import javax.net.ssl.*;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.KeyStore;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class ApacheHttpClient extends IHttpClient {
+
+    protected static final String CONTENT_TYPE = &quot;Content-Type&quot;;
+    protected static final String ACCEPT_ENCODING = &quot;Accept-Encoding&quot;;
+
+    private static final String EXT_PARAM_KEY_BUILDER = &quot;apache.httpclient.builder&quot;;
+    private static final int DEFAULT_THREAD_KEEP_ALIVE_TIME = 60;
+
+    private ExecutorService executorService;
+    private CloseableHttpClient httpClient;
+    private PoolingHttpClientConnectionManager connectionManager;
+<span class="fc" id="L54">    private AtomicBoolean initialized = new AtomicBoolean(false);</span>
+<span class="fc" id="L55">    private CountDownLatch latch = new CountDownLatch(1);</span>
+
+    private static volatile ApacheHttpClient client;
+
+    /**
+     * use ApacheHttpClient.getInstance() instead
+     */
+    @Deprecated
+    public static ApacheHttpClient getInstance(HttpClientConfig config) throws ClientException {
+<span class="fc" id="L64">        throw new IllegalStateException(&quot;use ApacheHttpClient.getInstance() instead&quot;);</span>
+    }
+
+    public static ApacheHttpClient getInstance() {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (client == null) {</span>
+<span class="fc" id="L69">            synchronized (ApacheHttpClient.class) {</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">                if (client == null) {</span>
+<span class="fc" id="L71">                    client = new ApacheHttpClient();</span>
+                }
+<span class="fc" id="L73">            }</span>
+        }
+<span class="fc" id="L75">        return client;</span>
+    }
+
+    private ApacheHttpClient() {
+<span class="fc" id="L79">        super();</span>
+<span class="fc" id="L80">    }</span>
+
+    private SSLConnectionSocketFactory createSSLConnectionSocketFactory() throws ClientException {
+        try {
+<span class="fc" id="L84">            List&lt;TrustManager&gt; trustManagerList = new ArrayList&lt;TrustManager&gt;();</span>
+<span class="fc" id="L85">            X509TrustManager[] trustManagers = clientConfig.getX509TrustManagers();</span>
+
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (null != trustManagers) {</span>
+<span class="fc" id="L88">                trustManagerList.addAll(Arrays.asList(trustManagers));</span>
+            }
+
+            // get trustManager using default certification from jdk
+<span class="fc" id="L92">            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());</span>
+<span class="fc" id="L93">            tmf.init((KeyStore) null);</span>
+<span class="fc" id="L94">            trustManagerList.addAll(Arrays.asList(tmf.getTrustManagers()));</span>
+
+<span class="fc" id="L96">            final List&lt;X509TrustManager&gt; finalTrustManagerList = new ArrayList&lt;X509TrustManager&gt;();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            for (TrustManager tm : trustManagerList) {</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">                if (tm instanceof X509TrustManager) {</span>
+<span class="fc" id="L99">                    finalTrustManagerList.add((X509TrustManager) tm);</span>
+                }
+<span class="fc" id="L101">            }</span>
+<span class="fc" id="L102">            CompositeX509TrustManager compositeX509TrustManager = new CompositeX509TrustManager(finalTrustManagerList);</span>
+<span class="fc" id="L103">            compositeX509TrustManager.setIgnoreSSLCert(clientConfig.isIgnoreSSLCerts());</span>
+<span class="fc" id="L104">            KeyManager[] keyManagers = null;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (clientConfig.getKeyManagers() != null) {</span>
+<span class="fc" id="L106">                keyManagers = clientConfig.getKeyManagers();</span>
+            }
+
+<span class="fc" id="L109">            SSLContext sslContext = SSLContext.getInstance(&quot;TLS&quot;);</span>
+<span class="fc" id="L110">            sslContext.init(keyManagers, new TrustManager[]{compositeX509TrustManager}, clientConfig.getSecureRandom());</span>
+
+<span class="fc" id="L112">            HostnameVerifier hostnameVerifier = null;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (clientConfig.isIgnoreSSLCerts()) {</span>
+<span class="fc" id="L114">                hostnameVerifier = new NoopHostnameVerifier();</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            } else if (clientConfig.getHostnameVerifier() != null) {</span>
+<span class="fc" id="L116">                hostnameVerifier = clientConfig.getHostnameVerifier();</span>
+            } else {
+<span class="fc" id="L118">                hostnameVerifier = new DefaultHostnameVerifier();</span>
+            }
+<span class="fc" id="L120">            SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, hostnameVerifier);</span>
+<span class="fc" id="L121">            return sslConnectionSocketFactory;</span>
+<span class="nc" id="L122">        } catch (Exception e) {</span>
+<span class="nc" id="L123">            throw new ClientException(&quot;SDK.InitFailed&quot;, &quot;Init https with SSL socket failed&quot;, e);</span>
+        }
+
+    }
+
+    private void initConnectionManager() throws ClientException {
+        // http
+<span class="fc" id="L130">        RegistryBuilder&lt;ConnectionSocketFactory&gt; socketFactoryRegistryBuilder = RegistryBuilder.create();</span>
+<span class="fc" id="L131">        socketFactoryRegistryBuilder.register(&quot;http&quot;, new PlainConnectionSocketFactory());</span>
+
+        // https
+<span class="fc" id="L134">        SSLConnectionSocketFactory sslConnectionSocketFactory = createSSLConnectionSocketFactory();</span>
+<span class="fc" id="L135">        socketFactoryRegistryBuilder.register(&quot;https&quot;, sslConnectionSocketFactory);</span>
+
+        // connPool
+<span class="fc" id="L138">        connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistryBuilder.build());</span>
+<span class="fc" id="L139">        connectionManager.setMaxTotal(clientConfig.getMaxRequests());</span>
+<span class="fc" id="L140">        connectionManager.setDefaultMaxPerRoute(clientConfig.getMaxRequestsPerHost());</span>
+<span class="fc" id="L141">    }</span>
+
+    private HttpClientBuilder initHttpClientBuilder() {
+        HttpClientBuilder builder;
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (clientConfig.containsExtParam(EXT_PARAM_KEY_BUILDER)) {</span>
+<span class="fc" id="L146">            builder = (HttpClientBuilder) clientConfig.getExtParam(EXT_PARAM_KEY_BUILDER);</span>
+        } else {
+<span class="fc" id="L148">            builder = HttpClientBuilder.create();</span>
+        }
+<span class="fc" id="L150">        return builder;</span>
+    }
+
+    private void initExecutor() {
+        // async
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (clientConfig.getExecutorService() == null) {</span>
+<span class="fc" id="L156">            executorService = new ThreadPoolExecutor(0, clientConfig.getMaxRequests(), DEFAULT_THREAD_KEEP_ALIVE_TIME,</span>
+                    TimeUnit.SECONDS, new SynchronousQueue&lt;Runnable&gt;(), new DefaultAsyncThreadFactory());
+        } else {
+<span class="fc" id="L159">            executorService = clientConfig.getExecutorService();</span>
+        }
+<span class="fc" id="L161">    }</span>
+
+    @Override
+    protected void init(final HttpClientConfig config0) throws ClientException {
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (!initialized.compareAndSet(false, true)) {</span>
+            try {
+<span class="fc" id="L167">                latch.await();</span>
+<span class="nc" id="L168">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L169">                throw new ClientException(&quot;SDK.InitFailed&quot;, &quot;Init apacheHttpClient failed&quot;, e);</span>
+<span class="fc" id="L170">            }</span>
+<span class="fc" id="L171">            return;</span>
+        }
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">        final HttpClientConfig config = (config0 != null ? config0 : HttpClientConfig.getDefault());</span>
+<span class="fc" id="L174">        this.clientConfig = config;</span>
+
+<span class="fc" id="L176">        HttpClientBuilder builder = initHttpClientBuilder();</span>
+
+        // default request config
+<span class="fc" id="L179">        RequestConfig defaultConfig = RequestConfig.custom().setConnectTimeout((int) config</span>
+<span class="fc" id="L180">                .getConnectionTimeoutMillis()).setSocketTimeout((int) config.getReadTimeoutMillis())</span>
+<span class="fc" id="L181">                .setConnectionRequestTimeout((int) config.getWriteTimeoutMillis()).build();</span>
+<span class="fc" id="L182">        builder.setDefaultRequestConfig(defaultConfig);</span>
+
+<span class="fc" id="L184">        initConnectionManager();</span>
+<span class="fc" id="L185">        builder.setConnectionManager(connectionManager);</span>
+<span class="fc" id="L186">        ApacheIdleConnectionCleaner.registerConnectionManager(connectionManager, config.getMaxIdleTimeMillis());</span>
+
+<span class="fc" id="L188">        initExecutor();</span>
+
+        // keepAlive
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        if (config.getKeepAliveDurationMillis() &gt; 0) {</span>
+<span class="fc" id="L192">            builder.setKeepAliveStrategy(new ConnectionKeepAliveStrategy() {</span>
+                @Override
+                public long getKeepAliveDuration(org.apache.http.HttpResponse response, HttpContext context) {
+<span class="fc" id="L195">                    long duration = DefaultConnectionKeepAliveStrategy.INSTANCE.getKeepAliveDuration(response, context);</span>
+
+<span class="pc bpc" id="L197" title="3 of 4 branches missed.">                    if (duration &gt; 0 &amp;&amp; duration &lt; config.getKeepAliveDurationMillis()) {</span>
+<span class="nc" id="L198">                        return duration;</span>
+                    } else {
+<span class="fc" id="L200">                        return config.getKeepAliveDurationMillis();</span>
+                    }
+                }
+            });
+        }
+
+<span class="fc" id="L206">        httpClient = builder.build();</span>
+<span class="fc" id="L207">        latch.countDown();</span>
+<span class="fc" id="L208">    }</span>
+
+    private HttpUriRequest parseToHttpRequest(HttpRequest apiReq) throws IOException, ClientException {
+<span class="fc" id="L211">        RequestBuilder builder = RequestBuilder.create(apiReq.getSysMethod().name());</span>
+
+<span class="fc" id="L213">        builder.setUri(apiReq.getSysUrl());</span>
+
+<span class="fc bfc" id="L215" title="All 6 branches covered.">        if (apiReq.getSysMethod().hasContent() &amp;&amp; apiReq.getHttpContent() != null &amp;&amp; apiReq.getHttpContent().length &gt; 0) {</span>
+<span class="fc" id="L216">            EntityBuilder bodyBuilder = EntityBuilder.create();</span>
+
+<span class="fc" id="L218">            String contentType = apiReq.getHeaderValue(CONTENT_TYPE);</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if (StringUtils.isEmpty(contentType)) {</span>
+<span class="fc" id="L220">                contentType = apiReq.getContentTypeValue(apiReq.getHttpContentType(), apiReq.getSysEncoding());</span>
+            }
+<span class="fc" id="L222">            bodyBuilder.setContentType(ContentType.parse(contentType));</span>
+<span class="fc" id="L223">            bodyBuilder.setBinary(apiReq.getHttpContent());</span>
+<span class="fc" id="L224">            builder.setEntity(bodyBuilder.build());</span>
+        }
+
+<span class="fc" id="L227">        builder.addHeader(ACCEPT_ENCODING, &quot;identity&quot;);</span>
+
+        // calcProxy will modify the &quot;Proxy-Authorization&quot; header of the request
+<span class="fc" id="L230">        HttpHost proxy = calcProxy(apiReq);</span>
+
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : apiReq.getSysHeaders().entrySet()) {</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">            if (&quot;Content-Length&quot;.equalsIgnoreCase(entry.getKey())) {</span>
+<span class="fc" id="L234">                continue;</span>
+            }
+<span class="fc" id="L236">            builder.addHeader(entry.getKey(), entry.getValue());</span>
+<span class="fc" id="L237">        }</span>
+        int connectTimeout;
+        int readTimeout;
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (null != apiReq.getSysConnectTimeout()) {</span>
+<span class="fc" id="L241">            connectTimeout = apiReq.getSysConnectTimeout();</span>
+        } else {
+<span class="fc" id="L243">            connectTimeout = (int) clientConfig.getConnectionTimeoutMillis();</span>
+        }
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (null != apiReq.getSysReadTimeout()) {</span>
+<span class="fc" id="L246">            readTimeout = apiReq.getSysReadTimeout();</span>
+        } else {
+<span class="fc" id="L248">            readTimeout = (int) clientConfig.getReadTimeoutMillis();</span>
+        }
+<span class="fc" id="L250">        RequestConfig requestConfig = RequestConfig.custom().setProxy(proxy).setConnectTimeout(connectTimeout).setSocketTimeout(</span>
+<span class="fc" id="L251">                readTimeout).setConnectionRequestTimeout((int) clientConfig.getWriteTimeoutMillis()).build();</span>
+<span class="fc" id="L252">        builder.setConfig(requestConfig);</span>
+<span class="fc" id="L253">        return builder.build();</span>
+    }
+
+    private HttpHost calcProxy(HttpRequest apiReq) throws MalformedURLException, ClientException {
+<span class="fc" id="L257">        boolean needProxy = HttpUtil.needProxy(new URL(apiReq.getSysUrl()).getHost(), clientConfig.getNoProxy(), EnvironmentUtils.getNoProxy());</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (!needProxy) {</span>
+<span class="fc" id="L259">            return null;</span>
+        }
+<span class="fc" id="L261">        URL url = new URL(apiReq.getSysUrl());</span>
+<span class="fc" id="L262">        HttpHost proxy = null;</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (&quot;https&quot;.equalsIgnoreCase(url.getProtocol())) {</span>
+<span class="fc" id="L264">            proxy = HttpUtil.getApacheProxy(clientConfig.getHttpsProxy(), EnvironmentUtils.getHttpsProxy(), apiReq);</span>
+        } else {
+<span class="fc" id="L266">            proxy = HttpUtil.getApacheProxy(clientConfig.getHttpProxy(), EnvironmentUtils.getHttpProxy(), apiReq);</span>
+        }
+<span class="fc" id="L268">        return proxy;</span>
+    }
+
+    private HttpResponse parseToHttpResponse(org.apache.http.HttpResponse httpResponse) throws IOException {
+<span class="fc" id="L272">        com.aliyuncs.http.HttpResponse result = new com.aliyuncs.http.HttpResponse();</span>
+
+        // status code
+<span class="fc" id="L275">        result.setStatus(httpResponse.getStatusLine().getStatusCode());</span>
+<span class="fc" id="L276">        result.setReasonPhrase(httpResponse.getStatusLine().getReasonPhrase());</span>
+<span class="fc bfc" id="L277" title="All 4 branches covered.">        if ((httpResponse.getEntity() != null &amp;&amp; (httpResponse.getEntity().getContentLength() &gt; 0 || httpResponse</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">                .getEntity().isChunked()))) {</span>
+            // content type
+<span class="fc" id="L280">            Header contentTypeHeader = httpResponse.getEntity().getContentType();</span>
+<span class="fc" id="L281">            ContentType contentType = ContentType.parse(contentTypeHeader.getValue());</span>
+<span class="fc" id="L282">            FormatType formatType = FormatType.mapAcceptToFormat(contentType.getMimeType());</span>
+<span class="fc" id="L283">            result.setHttpContentType(formatType);</span>
+
+<span class="fc" id="L285">            String charset = &quot;utf-8&quot;;</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">            if (contentType.getCharset() != null) {</span>
+<span class="fc" id="L287">                charset = contentType.getCharset().toString();</span>
+            }
+
+            // body
+<span class="fc" id="L291">            result.setHttpContent(EntityUtils.toByteArray(httpResponse.getEntity()), charset, formatType);</span>
+        }
+
+        // headers
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        for (Header header : httpResponse.getAllHeaders()) {</span>
+<span class="fc" id="L296">            result.putHeaderParameter(header.getName(), header.getValue());</span>
+        }
+
+<span class="fc" id="L299">        return result;</span>
+    }
+
+    @Override
+    public final HttpResponse syncInvoke(HttpRequest apiRequest) throws IOException, ClientException {
+<span class="fc" id="L304">        HttpUriRequest httpRequest = parseToHttpRequest(apiRequest);</span>
+<span class="fc" id="L305">        CloseableHttpResponse httpResponse = null;</span>
+        try {
+<span class="fc" id="L307">            httpResponse = httpClient.execute(httpRequest);</span>
+<span class="fc" id="L308">            return parseToHttpResponse(httpResponse);</span>
+        } finally {
+<span class="fc" id="L310">            IOUtils.closeQuietly(httpResponse);</span>
+        }
+    }
+
+    @Override
+    public final Future&lt;com.aliyuncs.http.HttpResponse&gt; asyncInvoke(final HttpRequest apiRequest,
+                                                                    final CallBack callback) {
+<span class="fc" id="L317">        return executorService.submit(new Callable&lt;com.aliyuncs.http.HttpResponse&gt;() {</span>
+            @Override
+            public com.aliyuncs.http.HttpResponse call() throws Exception {
+                com.aliyuncs.http.HttpResponse result;
+                try {
+<span class="fc" id="L322">                    result = syncInvoke(apiRequest);</span>
+<span class="nc" id="L323">                } catch (Exception e) {</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">                    if (callback != null) {</span>
+<span class="nc" id="L325">                        callback.onFailure(apiRequest, e);</span>
+                    }
+<span class="nc" id="L327">                    throw e;</span>
+<span class="fc" id="L328">                }</span>
+
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">                if (callback != null) {</span>
+<span class="fc" id="L331">                    callback.onResponse(apiRequest, result);</span>
+                }
+<span class="fc" id="L333">                return result;</span>
+            }
+        });
+    }
+
+    /**
+     * use HttpClientConfig.setIgnoreSSLCerts(true) instead
+     */
+    @Override
+    public void ignoreSSLCertificate() {
+<span class="fc" id="L343">        throw new IllegalStateException(&quot;Apache httpclient does not support modify sslFactory after inited, &quot;</span>
+                + &quot;use HttpClientConfig.setIgnoreSSLCerts(true) while building client&quot;);
+    }
+
+    /**
+     * use HttpClientConfig.setIgnoreSSLCerts(false) instead
+     */
+    @Override
+    public void restoreSSLCertificate() {
+<span class="fc" id="L352">        throw new IllegalStateException(&quot;Apache httpclient does not support modify sslFactory after inited, &quot;</span>
+                + &quot;use HttpClientConfig.setIgnoreSSLCerts(true) while building client&quot;);
+    }
+
+    @Override
+    public boolean isSingleton() {
+<span class="fc" id="L358">        return true;</span>
+    }
+
+    @Override
+    public void close() throws IOException {
+<span class="fc" id="L363">        client = null;</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">        if (initialized.compareAndSet(true, false)) {</span>
+<span class="fc" id="L365">            executorService.shutdown();</span>
+<span class="fc" id="L366">            ApacheIdleConnectionCleaner.removeConnectionManager(connectionManager);</span>
+<span class="fc" id="L367">            connectionManager.shutdown();</span>
+<span class="fc" id="L368">            IOUtils.closeQuietly(httpClient);</span>
+        }
+<span class="fc" id="L370">    }</span>
+
+<span class="fc" id="L372">    private class DefaultAsyncThreadFactory implements ThreadFactory {</span>
+
+<span class="fc" id="L374">        private AtomicInteger counter = new AtomicInteger(0);</span>
+
+        @Override
+        public Thread newThread(Runnable runnable) {
+<span class="fc" id="L378">            return new Thread(runnable, &quot;Aliyun_SDK_Async_ThreadPool_&quot; + counter.incrementAndGet());</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

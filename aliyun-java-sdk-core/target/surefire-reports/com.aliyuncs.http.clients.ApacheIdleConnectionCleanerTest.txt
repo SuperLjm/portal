@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.aliyuncs.http.clients.ApacheIdleConnectionCleanerTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.554 s - in com.aliyuncs.http.clients.ApacheIdleConnectionCleanerTest

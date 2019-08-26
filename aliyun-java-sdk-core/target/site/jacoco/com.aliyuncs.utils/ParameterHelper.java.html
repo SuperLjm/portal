@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ParameterHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.utils</a> &gt; <span class="el_source">ParameterHelper.java</span></div><h1>ParameterHelper.java</h1><pre class="source lang-java linenums">package com.aliyuncs.utils;
+
+import com.google.gson.Gson;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+public class ParameterHelper {
+
+    private final static String TIME_ZONE = &quot;GMT&quot;;
+    private final static String FORMAT_ISO8601 = &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot;;
+    private final static String FORMAT_RFC2616 = &quot;EEE, dd MMM yyyy HH:mm:ss zzz&quot;;
+
+<span class="fc" id="L18">    public ParameterHelper() {</span>
+<span class="fc" id="L19">    }</span>
+
+    public static String getUniqueNonce() {
+<span class="fc" id="L22">        StringBuffer uniqueNonce = new StringBuffer();</span>
+<span class="fc" id="L23">        UUID uuid = UUID.randomUUID();</span>
+<span class="fc" id="L24">        uniqueNonce.append(uuid.toString());</span>
+<span class="fc" id="L25">        uniqueNonce.append(System.currentTimeMillis());</span>
+<span class="fc" id="L26">        uniqueNonce.append(Thread.currentThread().getId());</span>
+<span class="fc" id="L27">        return uniqueNonce.toString();</span>
+    }
+
+    public static String getISO8601Time(Date date) {
+<span class="fc" id="L31">        SimpleDateFormat df = new SimpleDateFormat(FORMAT_ISO8601);</span>
+<span class="fc" id="L32">        df.setTimeZone(new SimpleTimeZone(0, TIME_ZONE));</span>
+<span class="fc" id="L33">        return df.format(date);</span>
+    }
+
+    public static String getRFC2616Date(Date date) {
+<span class="fc" id="L37">        SimpleDateFormat df = new SimpleDateFormat(FORMAT_RFC2616, Locale.ENGLISH);</span>
+<span class="fc" id="L38">        df.setTimeZone(new SimpleTimeZone(0, TIME_ZONE));</span>
+<span class="fc" id="L39">        return df.format(date);</span>
+    }
+
+    public static Date parse(String strDate) throws ParseException {
+<span class="fc bfc" id="L43" title="All 4 branches covered.">        if (null == strDate || &quot;&quot;.equals(strDate)) {</span>
+<span class="fc" id="L44">            return null;</span>
+        }
+        // The format contains 4 '
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (strDate.length() == FORMAT_ISO8601.length() - 4) {</span>
+<span class="fc" id="L48">            return parseISO8601(strDate);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        } else if (strDate.length() == FORMAT_RFC2616.length()) {</span>
+<span class="fc" id="L50">            return parseRFC2616(strDate);</span>
+        }
+<span class="fc" id="L52">        return null;</span>
+    }
+
+    public static Date parseISO8601(String strDate) throws ParseException {
+<span class="fc bfc" id="L56" title="All 4 branches covered.">        if (null == strDate || &quot;&quot;.equals(strDate)) {</span>
+<span class="fc" id="L57">            return null;</span>
+        }
+
+        // The format contains 4 ' symbol
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (strDate.length() != (FORMAT_ISO8601.length() - 4)) {</span>
+<span class="fc" id="L62">            return null;</span>
+        }
+
+<span class="fc" id="L65">        SimpleDateFormat df = new SimpleDateFormat(FORMAT_ISO8601);</span>
+<span class="fc" id="L66">        df.setTimeZone(new SimpleTimeZone(0, TIME_ZONE));</span>
+<span class="fc" id="L67">        return df.parse(strDate);</span>
+    }
+
+    public static Date parseRFC2616(String strDate) throws ParseException {
+<span class="fc bfc" id="L71" title="All 6 branches covered.">        if (null == strDate || &quot;&quot;.equals(strDate) || strDate.length() != FORMAT_RFC2616.length()) {</span>
+<span class="fc" id="L72">            return null;</span>
+        }
+<span class="fc" id="L74">        SimpleDateFormat df = new SimpleDateFormat(FORMAT_RFC2616, Locale.ENGLISH);</span>
+<span class="fc" id="L75">        df.setTimeZone(new SimpleTimeZone(0, TIME_ZONE));</span>
+<span class="fc" id="L76">        return df.parse(strDate);</span>
+    }
+
+    public static String md5Sum(byte[] buff) {
+        try {
+<span class="fc" id="L81">            MessageDigest md = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="fc" id="L82">            byte[] messageDigest = md.digest(buff);</span>
+<span class="fc" id="L83">            return Base64Helper.encode(messageDigest);</span>
+<span class="fc" id="L84">        } catch (Exception e) {</span>
+            // TODO: should not eat the excepiton
+        }
+<span class="fc" id="L87">        return null;</span>
+    }
+
+    public static byte[] getXmlData(Map&lt;String, String&gt; params) throws UnsupportedEncodingException {
+<span class="fc" id="L91">        StringBuilder xml = new StringBuilder();</span>
+<span class="fc" id="L92">        xml.append(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&quot;);</span>
+<span class="fc" id="L93">        Iterator&lt;Map.Entry&lt;String, String&gt;&gt; entries = params.entrySet().iterator();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        while (entries.hasNext()) {</span>
+<span class="fc" id="L95">            Map.Entry&lt;String, String&gt; entry = entries.next();</span>
+<span class="fc" id="L96">            xml.append(&quot;&lt;&quot; + entry.getKey() + &quot;&gt;&quot;);</span>
+<span class="fc" id="L97">            xml.append(entry.getValue());</span>
+<span class="fc" id="L98">            xml.append(&quot;&lt;/&quot; + entry.getKey() + &quot;&gt;&quot;);</span>
+<span class="fc" id="L99">        }</span>
+<span class="fc" id="L100">        return xml.toString().getBytes(&quot;UTF-8&quot;);</span>
+    }
+
+    public static byte[] getJsonData(Map&lt;String, String&gt; params) throws UnsupportedEncodingException {
+<span class="fc" id="L104">        String json = new Gson().toJson(params);</span>
+<span class="fc" id="L105">        return json.getBytes(&quot;UTF-8&quot;);</span>
+    }
+
+    public static byte[] getFormData(Map&lt;String, String&gt; params) throws UnsupportedEncodingException {
+<span class="fc" id="L109">        StringBuilder result = new StringBuilder();</span>
+<span class="fc" id="L110">        boolean first = true;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (first) {</span>
+<span class="fc" id="L113">                first = false;</span>
+            } else {
+<span class="fc" id="L115">                result.append(&quot;&amp;&quot;);</span>
+            }
+<span class="fc" id="L117">            result.append(URLEncoder.encode(entry.getKey(), &quot;UTF-8&quot;));</span>
+<span class="fc" id="L118">            result.append(&quot;=&quot;);</span>
+<span class="fc" id="L119">            result.append(URLEncoder.encode(entry.getValue(), &quot;UTF-8&quot;));</span>
+<span class="fc" id="L120">        }</span>
+<span class="fc" id="L121">        return result.toString().getBytes(&quot;UTF-8&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

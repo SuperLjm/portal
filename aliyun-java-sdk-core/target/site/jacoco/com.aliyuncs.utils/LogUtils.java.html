@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.utils</a> &gt; <span class="el_source">LogUtils.java</span></div><h1>LogUtils.java</h1><pre class="source lang-java linenums">package com.aliyuncs.utils;
+
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.http.HttpRequest;
+import com.aliyuncs.http.HttpResponse;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+<span class="fc" id="L20">public class LogUtils {</span>
+    public final static String REQUEST = &quot;{request}&quot;;
+    public final static String RESPONSE = &quot;{response}&quot;;
+    public final static String TS = &quot;{ts}&quot;;
+    public final static String DATE_ISO_8601 = &quot;{date_iso_8601}&quot;;
+    public final static String DATE_COMMON_LOG = &quot;{date_common_log}&quot;;
+    public final static String HOST = &quot;{host}&quot;;
+    public final static String METHOD = &quot;{method}&quot;;
+    public final static String URI = &quot;{uri}&quot;;
+    public final static String VERSION = &quot;{version}&quot;;
+    public final static String TARGET = &quot;{target}&quot;;
+    public final static String HOSTNAME = &quot;{hostname}&quot;;
+    public final static String CODE = &quot;{code}&quot;;
+    public final static String PHRASE = &quot;{phrase}&quot;;
+    public final static String REQ_HEADERS = &quot;{req_headers}&quot;;
+    public final static String RES_HEADERS = &quot;{res_headers}&quot;;
+    public final static String REQ_BODY = &quot;{req_body}&quot;;
+    public final static String RES_BODY = &quot;{res_body}&quot;;
+    public final static String PID = &quot;{pid}&quot;;
+    public final static String COST = &quot;{cost}&quot;;
+    public final static String START_TIME = &quot;{start_time}&quot;;
+    public final static String TIME = &quot;{time}&quot;;
+    public final static String ERROR = &quot;{error}&quot;;
+    public final static String DEFAULT_LOG_FORMAT =
+            &quot;{method} {uri} HTTP/{version} {code} {cost} {hostname} {pid} {error}&quot;;
+<span class="fc" id="L45">    public final static Pattern reqHeaderPattern = Pattern.compile(&quot;\\{req_header_(.*?)\\}&quot;);</span>
+<span class="fc" id="L46">    public final static Pattern resHeaderPattern = Pattern.compile(&quot;\\{res_header_(.*?)\\}&quot;);</span>
+
+    public static String fillContent(String format, LogUnit logUnit) {
+<span class="fc" id="L49">        String content = format.replace(REQUEST, logUnit.getHttpRequest().toString())</span>
+<span class="fc" id="L50">                .replace(TS, logUnit.getTs())</span>
+<span class="fc" id="L51">                .replace(DATE_ISO_8601, logUnit.getTs())</span>
+<span class="fc" id="L52">                .replace(DATE_COMMON_LOG, logUnit.getTs())</span>
+<span class="fc" id="L53">                .replace(HOST, logUnit.getHost())</span>
+<span class="fc" id="L54">                .replace(METHOD, logUnit.getMethod())</span>
+<span class="fc" id="L55">                .replace(URI, logUnit.getUrl())</span>
+<span class="fc" id="L56">                .replace(VERSION, logUnit.getVersion())</span>
+<span class="fc" id="L57">                .replace(TARGET, logUnit.getTarget())</span>
+<span class="fc" id="L58">                .replace(HOSTNAME, logUnit.getHostname())</span>
+<span class="fc" id="L59">                .replace(ERROR, logUnit.getError())</span>
+<span class="fc" id="L60">                .replace(REQ_HEADERS, logUnit.getReqHeaders())</span>
+<span class="fc" id="L61">                .replace(RES_HEADERS, logUnit.getResHeaders())</span>
+<span class="fc" id="L62">                .replace(REQ_BODY, logUnit.getReqBody())</span>
+<span class="fc" id="L63">                .replace(PID, logUnit.getPid())</span>
+<span class="fc" id="L64">                .replace(COST, logUnit.getCost())</span>
+<span class="fc" id="L65">                .replace(START_TIME, logUnit.getStartTime())</span>
+<span class="fc" id="L66">                .replace(TIME, logUnit.getTime());</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (null != logUnit.getHttpResponse()) {</span>
+<span class="fc" id="L68">            content = content.replace(RESPONSE, logUnit.getHttpResponse().toString()).</span>
+<span class="fc" id="L69">                    replace(RES_BODY, logUnit.getResBody()).</span>
+<span class="fc" id="L70">                    replace(PHRASE, logUnit.getPhrase()).</span>
+<span class="fc" id="L71">                    replace(CODE, logUnit.getCode());</span>
+        }
+<span class="fc" id="L73">        Matcher m = reqHeaderPattern.matcher(content);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        while (m.find()) {</span>
+<span class="fc" id="L75">            String headerKey = m.group(1);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            if (null != logUnit.getHttpRequest().getHeaderValue(headerKey)) {</span>
+<span class="fc" id="L77">                content = content.replace(m.group(), logUnit.getHttpRequest().getHeaderValue(headerKey));</span>
+            }
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">        m = resHeaderPattern.matcher(content);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        while (m.find()) {</span>
+<span class="fc" id="L82">            String headerKey = m.group(1);</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            if (null != logUnit.getHttpResponse().getHeaderValue(headerKey)) {</span>
+<span class="fc" id="L84">                content = content.replace(m.group(), logUnit.getHttpResponse().getHeaderValue(headerKey));</span>
+            }
+<span class="fc" id="L86">        }</span>
+<span class="fc" id="L87">        return content;</span>
+    }
+
+    public static String utcNow() {
+<span class="fc" id="L91">        TimeZone tz = TimeZone.getTimeZone(&quot;UTC&quot;);</span>
+<span class="fc" id="L92">        DateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss:SSS'Z'&quot;);</span>
+<span class="fc" id="L93">        df.setTimeZone(tz);</span>
+<span class="fc" id="L94">        return df.format(new Date());</span>
+    }
+
+    public static String localeNow() {
+<span class="fc" id="L98">        TimeZone tz = TimeZone.getDefault();</span>
+<span class="fc" id="L99">        DateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss:SSS'Z'&quot;);</span>
+<span class="fc" id="L100">        df.setTimeZone(tz);</span>
+<span class="fc" id="L101">        return df.format(new Date());</span>
+    }
+
+    public static long getCurrentPID() {
+        String processName =
+<span class="fc" id="L106">                java.lang.management.ManagementFactory.getRuntimeMXBean().getName();</span>
+<span class="fc" id="L107">        return Long.parseLong(processName.split(&quot;@&quot;)[0]);</span>
+    }
+
+    public static String getLocalHostName() {
+        try {
+<span class="fc" id="L112">            return InetAddress.getLocalHost().getHostName();</span>
+<span class="fc" id="L113">        } catch (UnknownHostException e) {</span>
+<span class="fc" id="L114">            e.printStackTrace();</span>
+        }
+<span class="fc" id="L116">        return &quot;unknown host name&quot;;</span>
+    }
+
+    public static LogUnit createLogUnit(HttpRequest httpRequest, HttpResponse httpResponse) {
+<span class="fc" id="L120">        return new LogUnit(httpRequest, httpResponse);</span>
+    }
+
+    @Getter
+<span class="pc" id="L124">    @Setter</span>
+    public static class LogUnit {
+<span class="fc" id="L126">        private HttpRequest httpRequest;</span>
+<span class="fc" id="L127">        private HttpResponse httpResponse;</span>
+<span class="fc" id="L128">        private String ts;</span>
+<span class="fc" id="L129">        private String host;</span>
+<span class="fc" id="L130">        private String method;</span>
+<span class="fc" id="L131">        private String url;</span>
+<span class="fc" id="L132">        private String version = &quot;1.1&quot;;</span>
+<span class="fc" id="L133">        private String target;</span>
+<span class="fc" id="L134">        private String hostname;</span>
+<span class="fc" id="L135">        private String code;</span>
+<span class="fc" id="L136">        private String phrase;</span>
+<span class="fc" id="L137">        private String reqHeaders;</span>
+<span class="fc" id="L138">        private String resHeaders;</span>
+<span class="fc" id="L139">        private String reqBody;</span>
+<span class="fc" id="L140">        private String resBody;</span>
+<span class="fc" id="L141">        private String pid;</span>
+<span class="fc" id="L142">        private String cost;</span>
+<span class="fc" id="L143">        private String startTime;</span>
+<span class="fc" id="L144">        private String time;</span>
+<span class="nc" id="L145">        private String error;</span>
+
+<span class="fc" id="L147">        public LogUnit(HttpRequest httpRequest, HttpResponse httpResponse) {</span>
+<span class="fc" id="L148">            this.httpRequest = httpRequest;</span>
+<span class="fc" id="L149">            this.httpResponse = httpResponse;</span>
+<span class="fc" id="L150">            this.ts = utcNow();</span>
+            try {
+<span class="fc" id="L152">                URL url = new URL(httpRequest.getSysUrl());</span>
+<span class="fc" id="L153">                this.host = url.getHost();</span>
+<span class="fc" id="L154">                this.target = &quot;&quot;;</span>
+<span class="fc" id="L155">                String path = url.getPath();</span>
+<span class="fc" id="L156">                String query = url.getQuery();</span>
+<span class="fc" id="L157">                String ref = url.getRef();</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">                if (null != path) {</span>
+<span class="fc" id="L159">                    this.target += path;</span>
+                }
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                if (null != query) {</span>
+<span class="fc" id="L162">                    this.target += &quot;?&quot; + query;</span>
+                }
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                if (null != ref) {</span>
+<span class="fc" id="L165">                    this.target += &quot;#&quot; + ref;</span>
+                }
+<span class="fc" id="L167">            } catch (MalformedURLException e) {</span>
+<span class="fc" id="L168">                e.printStackTrace();</span>
+<span class="fc" id="L169">            }</span>
+<span class="fc" id="L170">            this.method = httpRequest.getSysMethod().name();</span>
+<span class="fc" id="L171">            this.url = httpRequest.getSysUrl();</span>
+<span class="fc" id="L172">            this.hostname = getLocalHostName();</span>
+<span class="fc" id="L173">            this.reqHeaders = httpRequest.getSysHeaders().toString();</span>
+            try {
+<span class="fc" id="L175">                this.reqBody = httpRequest.getHttpContentString();</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                if (null != httpResponse) {</span>
+<span class="fc" id="L177">                    this.resHeaders = httpResponse.getSysHeaders().toString();</span>
+<span class="fc" id="L178">                    this.code = String.valueOf(httpResponse.getStatus());</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                    this.phrase = (httpResponse.getReasonPhrase() != null ? httpResponse.getReasonPhrase() : &quot;&quot;);</span>
+<span class="fc" id="L180">                    this.resBody = httpResponse.getHttpContentString();</span>
+                }
+<span class="fc" id="L182">            } catch (ClientException e) {</span>
+<span class="fc" id="L183">                e.printStackTrace();</span>
+<span class="fc" id="L184">            }</span>
+
+<span class="fc" id="L186">            this.pid = String.valueOf(getCurrentPID());</span>
+<span class="fc" id="L187">            this.time = localeNow();</span>
+<span class="fc" id="L188">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

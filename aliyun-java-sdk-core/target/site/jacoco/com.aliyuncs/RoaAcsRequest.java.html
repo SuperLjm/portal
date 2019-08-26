@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RoaAcsRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs</a> &gt; <span class="el_source">RoaAcsRequest.java</span></div><h1>RoaAcsRequest.java</h1><pre class="source lang-java linenums">package com.aliyuncs;
+
+import com.aliyuncs.auth.*;
+import com.aliyuncs.http.FormatType;
+import com.aliyuncs.http.HttpRequest;
+import com.aliyuncs.regions.ProductDomain;
+import com.aliyuncs.utils.ParameterHelper;
+
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class RoaAcsRequest&lt;T extends AcsResponse&gt; extends AcsRequest&lt;T&gt; {
+
+<span class="fc" id="L18">    protected String uriPattern = null;</span>
+<span class="fc" id="L19">    private Map&lt;String, String&gt; pathParameters = new HashMap&lt;String, String&gt;();</span>
+
+    public RoaAcsRequest(String product) {
+<span class="fc" id="L22">        super(product);</span>
+<span class="fc" id="L23">        initialize();</span>
+<span class="fc" id="L24">    }</span>
+
+    public RoaAcsRequest(String product, String version, String action) {
+<span class="fc" id="L27">        super(product);</span>
+<span class="fc" id="L28">        this.setSysVersion(version);</span>
+<span class="fc" id="L29">        this.setSysActionName(action);</span>
+<span class="fc" id="L30">        initialize();</span>
+<span class="fc" id="L31">    }</span>
+
+    public RoaAcsRequest(String product, String version, String action, String locationProduct) {
+<span class="fc" id="L34">        super(product);</span>
+<span class="fc" id="L35">        this.setSysVersion(version);</span>
+<span class="fc" id="L36">        this.setSysActionName(action);</span>
+<span class="fc" id="L37">        this.setSysLocationProduct(locationProduct);</span>
+<span class="fc" id="L38">        initialize();</span>
+<span class="fc" id="L39">    }</span>
+
+    public RoaAcsRequest(String product, String version, String action, String locationProduct, String endpointType) {
+<span class="fc" id="L42">        super(product);</span>
+<span class="fc" id="L43">        this.setSysVersion(version);</span>
+<span class="fc" id="L44">        this.setSysActionName(action);</span>
+<span class="fc" id="L45">        this.setSysLocationProduct(locationProduct);</span>
+<span class="fc" id="L46">        this.setSysEndpointType(endpointType);</span>
+<span class="fc" id="L47">        initialize();</span>
+<span class="fc" id="L48">    }</span>
+
+    private void initialize() {
+<span class="fc" id="L51">        this.composer = RoaSignatureComposer.getComposer();</span>
+<span class="fc" id="L52">        this.setHttpContentType(FormatType.FORM);</span>
+<span class="fc" id="L53">        this.setHttpContent(new byte[0], &quot;utf-8&quot;, null);</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public void setVersion(String version) {
+<span class="fc" id="L58">        super.setVersion(version);</span>
+<span class="fc" id="L59">        this.putHeaderParameter(&quot;x-acs-version&quot;, version);</span>
+<span class="fc" id="L60">    }</span>
+
+    @Override
+    public void setSecurityToken(String securityToken) {
+<span class="fc" id="L64">        super.setSecurityToken(securityToken);</span>
+<span class="fc" id="L65">        this.putHeaderParameter(&quot;x-acs-security-token&quot;, securityToken);</span>
+<span class="fc" id="L66">    }</span>
+
+    @Override
+    public void setSysVersion(String version) {
+<span class="fc" id="L70">        super.setSysVersion(version);</span>
+<span class="fc" id="L71">        this.putHeaderParameter(&quot;x-acs-version&quot;, version);</span>
+<span class="fc" id="L72">    }</span>
+
+    public Map&lt;String, String&gt; getPathParameters() {
+<span class="fc" id="L75">        return Collections.unmodifiableMap(pathParameters);</span>
+    }
+
+    protected void putPathParameter(String name, Object value) {
+<span class="fc" id="L79">        setParameter(this.pathParameters, name, value);</span>
+<span class="fc" id="L80">    }</span>
+
+    protected void putPathParameter(String name, String value) {
+<span class="fc" id="L83">        setParameter(this.pathParameters, name, value);</span>
+<span class="fc" id="L84">    }</span>
+
+    @Override
+    public String composeUrl(String endpoint, Map&lt;String, String&gt; queries) throws UnsupportedEncodingException {
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        Map&lt;String, String&gt; mapQueries = (queries == null) ? this.getSysQueryParameters() : queries;</span>
+<span class="fc" id="L89">        StringBuilder urlBuilder = new StringBuilder(&quot;&quot;);</span>
+<span class="fc" id="L90">        urlBuilder.append(this.getSysProtocol().toString());</span>
+<span class="fc" id="L91">        urlBuilder.append(&quot;://&quot;).append(endpoint);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (null != this.uriPattern) {</span>
+<span class="fc" id="L93">            urlBuilder.append(RoaSignatureComposer.replaceOccupiedParameters(uriPattern, this.getPathParameters()));</span>
+        }
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (-1 == urlBuilder.indexOf(&quot;?&quot;)) {</span>
+<span class="fc" id="L96">            urlBuilder.append(&quot;?&quot;);</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        } else if (!urlBuilder.toString().endsWith(&quot;?&quot;)) {</span>
+<span class="fc" id="L98">            urlBuilder.append(&quot;&amp;&quot;);</span>
+        }
+<span class="fc" id="L100">        String query = concatQueryString(mapQueries);</span>
+<span class="fc" id="L101">        String url = urlBuilder.append(query).toString();</span>
+<span class="fc bfc" id="L102" title="All 4 branches covered.">        if (url.endsWith(&quot;?&quot;) || url.endsWith(&quot;&amp;&quot;)) {</span>
+<span class="fc" id="L103">            url = url.substring(0, url.length() - 1);</span>
+        }
+<span class="fc" id="L105">        return url;</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysUriPattern instead of this
+     */
+    @Deprecated
+    public String getUriPattern() {
+<span class="fc" id="L113">        return uriPattern;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysUriPattern instead of this
+     */
+    @Deprecated
+    public void setUriPattern(String uriPattern) {
+<span class="fc" id="L121">        this.uriPattern = uriPattern;</span>
+<span class="fc" id="L122">    }</span>
+
+    public String getSysUriPattern() {
+<span class="fc" id="L125">        return uriPattern;</span>
+    }
+
+    public void setSysUriPattern(String uriPattern) {
+<span class="fc" id="L129">        this.uriPattern = uriPattern;</span>
+<span class="fc" id="L130">    }</span>
+
+    @Override
+    public HttpRequest signRequest(Signer signer, AlibabaCloudCredentials credentials, FormatType format,
+                                   ProductDomain domain) throws InvalidKeyException, IllegalStateException,
+            UnsupportedEncodingException, NoSuchAlgorithmException {
+<span class="fc" id="L136">        Map&lt;String, String&gt; bodyParams = this.getSysBodyParameters();</span>
+<span class="pc bpc" id="L137" title="1 of 4 branches missed.">        if (bodyParams != null &amp;&amp; !bodyParams.isEmpty()) {</span>
+            byte[] data;
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (FormatType.JSON == this.getHttpContentType()) {</span>
+<span class="fc" id="L140">                data = ParameterHelper.getJsonData(bodyParams);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            } else if (FormatType.XML == this.getHttpContentType()) {</span>
+<span class="fc" id="L142">                data = ParameterHelper.getXmlData(bodyParams);</span>
+            } else {
+                // For contentType RAW and Form, the actual data format will be form
+<span class="fc" id="L145">                data = ParameterHelper.getFormData(bodyParams);</span>
+            }
+<span class="fc" id="L147">            this.setHttpContent(data, &quot;UTF-8&quot;, null);</span>
+        }
+
+<span class="fc" id="L150">        Map&lt;String, String&gt; imutableMap = new HashMap&lt;String, String&gt;(this.getSysHeaders());</span>
+<span class="fc bfc" id="L151" title="All 4 branches covered.">        if (null != signer &amp;&amp; null != credentials) {</span>
+<span class="fc" id="L152">            String accessKeyId = credentials.getAccessKeyId();</span>
+<span class="fc" id="L153">            imutableMap = this.composer.refreshSignParameters(this.getSysHeaders(), signer, accessKeyId, format);</span>
+<span class="fc" id="L154">            imutableMap.put(&quot;RegionId&quot;, this.getSysRegionId());</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (credentials instanceof BasicSessionCredentials) {</span>
+<span class="fc" id="L156">                String sessionToken = ((BasicSessionCredentials) credentials).getSessionToken();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                if (null != sessionToken) {</span>
+<span class="fc" id="L158">                    imutableMap.put(&quot;x-acs-security-token&quot;, sessionToken);</span>
+                }
+            }
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            if (credentials instanceof BearerTokenCredentials) {</span>
+<span class="fc" id="L162">                String bearerToken = ((BearerTokenCredentials) credentials).getBearerToken();</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">                if (null != ((BearerTokenCredentials) credentials).getBearerToken()) {</span>
+<span class="fc" id="L164">                    imutableMap.put(&quot;x-acs-bearer-token&quot;, bearerToken);</span>
+                }
+            }
+<span class="fc" id="L167">            String strToSign = this.composer.composeStringToSign(this.getSysMethod(), this.getSysUriPattern(), signer,</span>
+<span class="fc" id="L168">                    this.getSysQueryParameters(), imutableMap, this.getPathParameters());</span>
+<span class="fc" id="L169">            String signature = signer.signString(strToSign, credentials);</span>
+<span class="fc" id="L170">            imutableMap.put(&quot;Authorization&quot;, &quot;acs &quot; + accessKeyId + &quot;:&quot; + signature);</span>
+        }
+<span class="fc" id="L172">        this.setSysUrl(this.composeUrl(domain.getDomainName(), this.getSysQueryParameters()));</span>
+<span class="fc" id="L173">        this.headers = imutableMap;</span>
+<span class="fc" id="L174">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

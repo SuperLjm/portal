@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpClientConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.http</a> &gt; <span class="el_source">HttpClientConfig.java</span></div><h1>HttpClientConfig.java</h1><pre class="source lang-java linenums">package com.aliyuncs.http;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
+import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+<span class="fc" id="L12">public class HttpClientConfig {</span>
+
+    public static final long DEFAULT_CONNECTION_TIMEOUT = 5000;
+
+    public static final long DEFAULT_READ_TIMEOUT = 10000;
+    /**
+     * client type
+     */
+<span class="fc" id="L20">    private HttpClientType clientType = null;</span>
+<span class="fc" id="L21">    private String customClientClassName = null;</span>
+
+    /**
+     * connectionPool
+     **/
+<span class="fc" id="L26">    private int maxIdleConnections = 5;</span>
+<span class="fc" id="L27">    private long maxIdleTimeMillis = 60 * 1000L;</span>
+<span class="fc" id="L28">    private long keepAliveDurationMillis = 5000L;</span>
+
+    /**
+     * timeout
+     **/
+<span class="fc" id="L33">    private long connectionTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT;</span>
+<span class="fc" id="L34">    private long readTimeoutMillis = DEFAULT_READ_TIMEOUT;</span>
+<span class="fc" id="L35">    private long writeTimeoutMillis = 15000L;</span>
+
+    /**
+     * global protocolType
+     **/
+<span class="fc" id="L40">    private ProtocolType protocolType = ProtocolType.HTTP;</span>
+
+    /**
+     * https
+     **/
+<span class="fc" id="L45">    private boolean ignoreSSLCerts = false;</span>
+<span class="fc" id="L46">    @Deprecated</span>
+    private SSLSocketFactory sslSocketFactory = null;
+<span class="fc" id="L48">    private KeyManager[] keyManagers = null;</span>
+<span class="fc" id="L49">    private X509TrustManager[] x509TrustManagers = null;</span>
+<span class="fc" id="L50">    private SecureRandom secureRandom = null;</span>
+<span class="fc" id="L51">    private HostnameVerifier hostnameVerifier = null;</span>
+<span class="fc" id="L52">    @Deprecated</span>
+    private String certPath = null;
+
+    /**
+     * dispatcher
+     **/
+<span class="fc" id="L58">    private int maxRequests = 64;</span>
+<span class="fc" id="L59">    private int maxRequestsPerHost = 5;</span>
+<span class="fc" id="L60">    private Runnable idleCallback = null;</span>
+<span class="fc" id="L61">    private ExecutorService executorService = null;</span>
+
+
+    /**
+     * proxy configurations
+     */
+
+<span class="fc" id="L68">    private String httpProxy = null;</span>
+<span class="fc" id="L69">    private String httpsProxy = null;</span>
+<span class="fc" id="L70">    private String noProxy = null;</span>
+
+    /**
+     * extra params
+     */
+<span class="fc" id="L75">    private Map&lt;String, Object&gt; extParams = new HashMap&lt;String, Object&gt;();</span>
+
+<span class="fc" id="L77">    private boolean compatibleMode = false;</span>
+
+    public static HttpClientConfig getDefault() {
+<span class="fc" id="L80">        HttpClientConfig config = new HttpClientConfig();</span>
+<span class="fc" id="L81">        config.setClientType(HttpClientType.ApacheHttpClient);</span>
+<span class="fc" id="L82">        return config;</span>
+    }
+
+    public HttpClientType getClientType() {
+<span class="fc" id="L86">        return clientType;</span>
+    }
+
+    public void setClientType(HttpClientType clientType) {
+<span class="fc" id="L90">        this.clientType = clientType;</span>
+<span class="fc" id="L91">    }</span>
+
+
+    @Deprecated
+    public String getCertPath() {
+<span class="fc" id="L96">        return certPath;</span>
+    }
+
+    /**
+     * use HttpClientConfig.setX509TrustManagers() and HttpClientConfig.setKeyManagers() instead
+     */
+    @Deprecated
+    public void setCertPath(String certPath) {
+<span class="fc" id="L104">        this.certPath = certPath;</span>
+<span class="fc" id="L105">    }</span>
+
+    public int getMaxIdleConnections() {
+<span class="fc" id="L108">        return maxIdleConnections;</span>
+    }
+
+    public void setMaxIdleConnections(int maxIdleConnections) {
+<span class="fc" id="L112">        this.maxIdleConnections = maxIdleConnections;</span>
+<span class="fc" id="L113">    }</span>
+
+    public long getMaxIdleTimeMillis() {
+<span class="fc" id="L116">        return maxIdleTimeMillis;</span>
+    }
+
+    public void setMaxIdleTimeMillis(long maxIdleTimeMillis) {
+<span class="fc" id="L120">        this.maxIdleTimeMillis = maxIdleTimeMillis;</span>
+<span class="fc" id="L121">    }</span>
+
+    public long getKeepAliveDurationMillis() {
+<span class="fc" id="L124">        return keepAliveDurationMillis;</span>
+    }
+
+    public void setKeepAliveDurationMillis(long keepAliveDurationMillis) {
+<span class="fc" id="L128">        this.keepAliveDurationMillis = keepAliveDurationMillis;</span>
+<span class="fc" id="L129">    }</span>
+
+    public long getConnectionTimeoutMillis() {
+<span class="fc" id="L132">        return connectionTimeoutMillis;</span>
+    }
+
+    public void setConnectionTimeoutMillis(long connectionTimeoutMillis) {
+<span class="fc" id="L136">        this.connectionTimeoutMillis = connectionTimeoutMillis;</span>
+<span class="fc" id="L137">    }</span>
+
+    public long getReadTimeoutMillis() {
+<span class="fc" id="L140">        return readTimeoutMillis;</span>
+    }
+
+    public void setReadTimeoutMillis(long readTimeoutMillis) {
+<span class="fc" id="L144">        this.readTimeoutMillis = readTimeoutMillis;</span>
+<span class="fc" id="L145">    }</span>
+
+    public long getWriteTimeoutMillis() {
+<span class="fc" id="L148">        return writeTimeoutMillis;</span>
+    }
+
+    public void setWriteTimeoutMillis(long writeTimeoutMillis) {
+<span class="fc" id="L152">        this.writeTimeoutMillis = writeTimeoutMillis;</span>
+<span class="fc" id="L153">    }</span>
+
+    @Deprecated
+    public SSLSocketFactory getSslSocketFactory() {
+<span class="fc" id="L157">        return this.sslSocketFactory;</span>
+    }
+
+    /**
+     * use HttpClientConfig.setX509TrustManagers() and HttpClientConfig.setKeyManagers() instead
+     */
+    @Deprecated
+    public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
+<span class="fc" id="L165">        this.sslSocketFactory = sslSocketFactory;</span>
+<span class="fc" id="L166">    }</span>
+
+    public KeyManager[] getKeyManagers() {
+<span class="fc" id="L169">        return keyManagers;</span>
+    }
+
+    public void setKeyManagers(KeyManager[] keyManagers) {
+<span class="fc" id="L173">        this.keyManagers = keyManagers;</span>
+<span class="fc" id="L174">    }</span>
+
+    public X509TrustManager[] getX509TrustManagers() {
+<span class="fc" id="L177">        return x509TrustManagers;</span>
+    }
+
+    public void setX509TrustManagers(X509TrustManager[] x509TrustManagers) {
+<span class="fc" id="L181">        this.x509TrustManagers = x509TrustManagers;</span>
+<span class="fc" id="L182">    }</span>
+
+    public SecureRandom getSecureRandom() {
+<span class="fc" id="L185">        return secureRandom;</span>
+    }
+
+    public void setSecureRandom(SecureRandom secureRandom) {
+<span class="fc" id="L189">        this.secureRandom = secureRandom;</span>
+<span class="fc" id="L190">    }</span>
+
+    public HostnameVerifier getHostnameVerifier() {
+<span class="fc" id="L193">        return hostnameVerifier;</span>
+    }
+
+    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+<span class="fc" id="L197">        this.hostnameVerifier = hostnameVerifier;</span>
+<span class="fc" id="L198">    }</span>
+
+    public int getMaxRequests() {
+<span class="fc" id="L201">        return maxRequests;</span>
+    }
+
+    public void setMaxRequests(int maxRequests) {
+<span class="fc" id="L205">        this.maxRequests = maxRequests;</span>
+<span class="fc" id="L206">    }</span>
+
+    public int getMaxRequestsPerHost() {
+<span class="fc" id="L209">        return maxRequestsPerHost;</span>
+    }
+
+    public void setMaxRequestsPerHost(int maxRequestsPerHost) {
+<span class="fc" id="L213">        this.maxRequestsPerHost = maxRequestsPerHost;</span>
+<span class="fc" id="L214">    }</span>
+
+    public Runnable getIdleCallback() {
+<span class="fc" id="L217">        return idleCallback;</span>
+    }
+
+    public void setIdleCallback(Runnable idleCallback) {
+<span class="fc" id="L221">        this.idleCallback = idleCallback;</span>
+<span class="fc" id="L222">    }</span>
+
+    public ExecutorService getExecutorService() {
+<span class="fc" id="L225">        return executorService;</span>
+    }
+
+    public void setExecutorService(ExecutorService executorService) {
+<span class="fc" id="L229">        this.executorService = executorService;</span>
+<span class="fc" id="L230">    }</span>
+
+    public Map&lt;String, Object&gt; getExtParams() {
+<span class="fc" id="L233">        return extParams;</span>
+    }
+
+    public void setExtParams(Map&lt;String, Object&gt; extParams) {
+<span class="fc" id="L237">        this.extParams = extParams;</span>
+<span class="fc" id="L238">    }</span>
+
+    public String getCustomClientClassName() {
+<span class="fc" id="L241">        return customClientClassName;</span>
+    }
+
+    public void setCustomClientClassName(String customClientClassName) {
+<span class="fc" id="L245">        this.customClientClassName = customClientClassName;</span>
+<span class="fc" id="L246">    }</span>
+
+    public Object getExtParam(Object key) {
+<span class="fc" id="L249">        return extParams.get(key);</span>
+    }
+
+    public Object setExtParam(String key, Object value) {
+<span class="fc" id="L253">        return extParams.put(key, value);</span>
+    }
+
+    public boolean containsExtParam(Object key) {
+<span class="fc" id="L257">        return extParams.containsKey(key);</span>
+    }
+
+    public boolean isIgnoreSSLCerts() {
+<span class="fc" id="L261">        return ignoreSSLCerts;</span>
+    }
+
+    public void setIgnoreSSLCerts(boolean ignoreSSLCerts) {
+<span class="fc" id="L265">        this.ignoreSSLCerts = ignoreSSLCerts;</span>
+<span class="fc" id="L266">    }</span>
+
+    public boolean isCompatibleMode() {
+<span class="fc" id="L269">        return compatibleMode;</span>
+    }
+
+    public void setCompatibleMode(boolean compatibleMode) {
+<span class="fc" id="L273">        this.compatibleMode = compatibleMode;</span>
+<span class="fc" id="L274">    }</span>
+
+    public ProtocolType getProtocolType() {
+<span class="fc" id="L277">        return protocolType;</span>
+    }
+
+    public void setProtocolType(ProtocolType protocolType) {
+<span class="fc" id="L281">        this.protocolType = protocolType;</span>
+<span class="fc" id="L282">    }</span>
+
+    public String getHttpProxy() {
+<span class="fc" id="L285">        return httpProxy;</span>
+    }
+
+    public void setHttpProxy(String httpProxy) {
+<span class="fc" id="L289">        this.httpProxy = httpProxy;</span>
+<span class="fc" id="L290">    }</span>
+
+    public String getHttpsProxy() {
+<span class="fc" id="L293">        return httpsProxy;</span>
+    }
+
+    public void setHttpsProxy(String httpsProxy) {
+<span class="fc" id="L297">        this.httpsProxy = httpsProxy;</span>
+<span class="fc" id="L298">    }</span>
+
+    public String getNoProxy() {
+<span class="fc" id="L301">        return noProxy;</span>
+    }
+
+    public void setNoProxy(String noProxy) {
+<span class="fc" id="L305">        this.noProxy = noProxy;</span>
+<span class="fc" id="L306">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

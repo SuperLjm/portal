@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChainedEndpointResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.endpoint</a> &gt; <span class="el_source">ChainedEndpointResolver.java</span></div><h1>ChainedEndpointResolver.java</h1><pre class="source lang-java linenums">package com.aliyuncs.endpoint;
+
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.exceptions.ErrorCodeConstant;
+import com.aliyuncs.exceptions.ErrorMessageConstant;
+
+import java.util.List;
+import java.util.Set;
+
+@SuppressWarnings({&quot;ALL&quot;, &quot;AlibabaClassMustHaveAuthor&quot;})
+public class ChainedEndpointResolver implements EndpointResolver {
+    protected List&lt;EndpointResolverBase&gt; endpointResolvers;
+
+<span class="fc" id="L14">    public ChainedEndpointResolver(List&lt;EndpointResolverBase&gt; resolverChain) {</span>
+<span class="fc" id="L15">        this.endpointResolvers = resolverChain;</span>
+<span class="fc" id="L16">    }</span>
+
+    private void checkProductCode(ResolveEndpointRequest request) throws ClientException {
+<span class="fc" id="L19">        boolean productCodeValid = false;</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        for (EndpointResolverBase resolver : endpointResolvers) {</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">            if (resolver.isProductCodeValid(request)) {</span>
+<span class="fc" id="L22">                productCodeValid = true;</span>
+            }
+<span class="fc" id="L24">        }</span>
+
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (!productCodeValid) {</span>
+<span class="fc" id="L27">            throw new ClientException(ErrorCodeConstant.SDK_ENDPOINT_RESOLVING_ERROR,</span>
+<span class="fc" id="L28">                    String.format(ErrorMessageConstant.ENDPOINT_NO_PRODUCT, request.productCode));</span>
+        }
+<span class="fc" id="L30">    }</span>
+
+    private void checkRegionId(ResolveEndpointRequest request) throws ClientException {
+<span class="fc" id="L33">        boolean regionIdValid = false;</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        for (EndpointResolverBase resolver : endpointResolvers) {</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (resolver.isRegionIdValid(request)) {</span>
+<span class="fc" id="L36">                regionIdValid = true;</span>
+            }
+<span class="fc" id="L38">        }</span>
+
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (!regionIdValid) {</span>
+<span class="fc" id="L41">            throw new ClientException(ErrorCodeConstant.SDK_ENDPOINT_RESOLVING_ERROR,</span>
+<span class="fc" id="L42">                    String.format(ErrorMessageConstant.INVALID_REGION_ID, request.regionId));</span>
+        }
+<span class="fc" id="L44">    }</span>
+
+    private String getAvailableRegionsHint(String productCode) {
+<span class="fc" id="L47">        Set&lt;String&gt; availabeRegions = null;</span>
+<span class="fc" id="L48">        String availabeRegionsHint = &quot;&quot;;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        for (EndpointResolverBase resolver : endpointResolvers) {</span>
+<span class="fc" id="L50">            availabeRegions = resolver.getValidRegionIdsByProduct(productCode);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            if (availabeRegions != null) {</span>
+<span class="fc" id="L52">                availabeRegionsHint = &quot;\nOr you can use the other available regions:&quot;;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                for (String availabeRegion : availabeRegions) {</span>
+<span class="fc" id="L54">                    availabeRegionsHint += &quot; &quot; + availabeRegion;</span>
+<span class="fc" id="L55">                }</span>
+<span class="fc" id="L56">                break;</span>
+            }
+<span class="fc" id="L58">        }</span>
+<span class="fc" id="L59">        return availabeRegionsHint;</span>
+    }
+
+    @Override
+    public String resolve(ResolveEndpointRequest request) throws ClientException {
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (EndpointResolverBase resolver : endpointResolvers) {</span>
+<span class="fc" id="L65">            String endpoint = resolver.resolve(request);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (endpoint != null) {</span>
+<span class="fc" id="L67">                return endpoint;</span>
+            }
+<span class="fc" id="L69">        }</span>
+
+<span class="fc" id="L71">        checkProductCode(request);</span>
+<span class="fc" id="L72">        checkRegionId(request);</span>
+
+<span class="fc" id="L74">        throw new ClientException(ErrorCodeConstant.SDK_ENDPOINT_RESOLVING_ERROR,</span>
+<span class="fc" id="L75">                String.format(ErrorMessageConstant.ENDPOINT_NO_REGION, request.regionId, request.productCode,</span>
+<span class="fc" id="L76">                        getAvailableRegionsHint(request.productCode)));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssumeRoleResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.auth.sts</a> &gt; <span class="el_source">AssumeRoleResponse.java</span></div><h1>AssumeRoleResponse.java</h1><pre class="source lang-java linenums">package com.aliyuncs.auth.sts;
+
+import com.aliyuncs.AcsResponse;
+import com.aliyuncs.transform.UnmarshallerContext;
+
+<span class="fc" id="L6">public class AssumeRoleResponse extends AcsResponse {</span>
+
+    private String requestId;
+
+    private Credentials credentials;
+
+    private AssumedRoleUser assumedRoleUser;
+
+    public String getRequestId() {
+<span class="fc" id="L15">        return this.requestId;</span>
+    }
+
+    public void setRequestId(String requestId) {
+<span class="fc" id="L19">        this.requestId = requestId;</span>
+<span class="fc" id="L20">    }</span>
+
+    public Credentials getCredentials() {
+<span class="fc" id="L23">        return this.credentials;</span>
+    }
+
+    public void setCredentials(Credentials credentials) {
+<span class="fc" id="L27">        this.credentials = credentials;</span>
+<span class="fc" id="L28">    }</span>
+
+    public AssumedRoleUser getAssumedRoleUser() {
+<span class="fc" id="L31">        return this.assumedRoleUser;</span>
+    }
+
+    public void setAssumedRoleUser(AssumedRoleUser assumedRoleUser) {
+<span class="fc" id="L35">        this.assumedRoleUser = assumedRoleUser;</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public AssumeRoleResponse getInstance(UnmarshallerContext context) {
+<span class="fc" id="L40">        return AssumeRoleResponseUnmarshaller.unmarshall(this, context);</span>
+    }
+
+<span class="fc" id="L43">    public static class Credentials {</span>
+
+        private String securityToken;
+
+        private String accessKeySecret;
+
+        private String accessKeyId;
+
+        private String expiration;
+
+        public String getSecurityToken() {
+<span class="fc" id="L54">            return this.securityToken;</span>
+        }
+
+        public void setSecurityToken(String securityToken) {
+<span class="fc" id="L58">            this.securityToken = securityToken;</span>
+<span class="fc" id="L59">        }</span>
+
+        public String getAccessKeySecret() {
+<span class="fc" id="L62">            return this.accessKeySecret;</span>
+        }
+
+        public void setAccessKeySecret(String accessKeySecret) {
+<span class="fc" id="L66">            this.accessKeySecret = accessKeySecret;</span>
+<span class="fc" id="L67">        }</span>
+
+        public String getAccessKeyId() {
+<span class="fc" id="L70">            return this.accessKeyId;</span>
+        }
+
+        public void setAccessKeyId(String accessKeyId) {
+<span class="fc" id="L74">            this.accessKeyId = accessKeyId;</span>
+<span class="fc" id="L75">        }</span>
+
+        public String getExpiration() {
+<span class="fc" id="L78">            return this.expiration;</span>
+        }
+
+        public void setExpiration(String expiration) {
+<span class="fc" id="L82">            this.expiration = expiration;</span>
+<span class="fc" id="L83">        }</span>
+    }
+
+<span class="fc" id="L86">    public static class AssumedRoleUser {</span>
+
+        private String arn;
+
+        private String assumedRoleId;
+
+        public String getArn() {
+<span class="fc" id="L93">            return this.arn;</span>
+        }
+
+        public void setArn(String arn) {
+<span class="fc" id="L97">            this.arn = arn;</span>
+<span class="fc" id="L98">        }</span>
+
+        public String getAssumedRoleId() {
+<span class="fc" id="L101">            return this.assumedRoleId;</span>
+        }
+
+        public void setAssumedRoleId(String assumedRoleId) {
+<span class="fc" id="L105">            this.assumedRoleId = assumedRoleId;</span>
+<span class="fc" id="L106">        }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

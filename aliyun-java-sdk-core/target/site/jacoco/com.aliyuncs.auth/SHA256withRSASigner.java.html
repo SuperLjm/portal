@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SHA256withRSASigner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.auth</a> &gt; <span class="el_source">SHA256withRSASigner.java</span></div><h1>SHA256withRSASigner.java</h1><pre class="source lang-java linenums">/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.aliyuncs.auth;
+
+import javax.xml.bind.DatatypeConverter;
+import java.io.UnsupportedEncodingException;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+
+/**
+ * Created by haowei.yao on 2017/9/28.
+ */
+
+<span class="fc" id="L32">public class SHA256withRSASigner extends Signer {</span>
+
+    public static final String ENCODING = &quot;UTF-8&quot;;
+    private static final String ALGORITHM_NAME = &quot;SHA256withRSA&quot;;
+
+    @Override
+    public String signString(String stringToSign, String accessKeySecret) {
+        try {
+<span class="fc" id="L40">            Signature rsaSign = Signature.getInstance(&quot;SHA256withRSA&quot;);</span>
+<span class="fc" id="L41">            KeyFactory kf = KeyFactory.getInstance(&quot;RSA&quot;);</span>
+<span class="fc" id="L42">            byte[] keySpec = DatatypeConverter.parseBase64Binary(accessKeySecret);</span>
+<span class="fc" id="L43">            PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(keySpec));</span>
+<span class="fc" id="L44">            rsaSign.initSign(privateKey);</span>
+<span class="fc" id="L45">            rsaSign.update(stringToSign.getBytes(ENCODING));</span>
+<span class="fc" id="L46">            byte[] sign = rsaSign.sign();</span>
+<span class="fc" id="L47">            String signature = new String(DatatypeConverter.printBase64Binary(sign));</span>
+<span class="fc" id="L48">            return signature;</span>
+<span class="nc" id="L49">        } catch (NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L50">            throw new IllegalArgumentException(e.toString());</span>
+<span class="fc" id="L51">        } catch (InvalidKeySpecException e) {</span>
+<span class="fc" id="L52">            throw new IllegalArgumentException(e.toString());</span>
+<span class="nc" id="L53">        } catch (InvalidKeyException e) {</span>
+<span class="nc" id="L54">            throw new IllegalArgumentException(e.toString());</span>
+<span class="nc" id="L55">        } catch (SignatureException e) {</span>
+<span class="nc" id="L56">            throw new IllegalArgumentException(e.toString());</span>
+<span class="nc" id="L57">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L58">            throw new IllegalArgumentException(e.toString());</span>
+        }
+    }
+
+    @Override
+    public String signString(String stringToSign, AlibabaCloudCredentials credentials) {
+<span class="fc" id="L64">        return signString(stringToSign, credentials.getAccessKeySecret());</span>
+    }
+
+    @Override
+    public String getSignerName() {
+<span class="fc" id="L69">        return ALGORITHM_NAME;</span>
+    }
+
+    @Override
+    public String getSignerVersion() {
+<span class="fc" id="L74">        return &quot;1.0&quot;;</span>
+    }
+
+    @Override
+    public String getSignerType() {
+<span class="fc" id="L79">        return &quot;PRIVATEKEY&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

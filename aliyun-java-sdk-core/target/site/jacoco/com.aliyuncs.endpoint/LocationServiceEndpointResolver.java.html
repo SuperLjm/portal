@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocationServiceEndpointResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.endpoint</a> &gt; <span class="el_source">LocationServiceEndpointResolver.java</span></div><h1>LocationServiceEndpointResolver.java</h1><pre class="source lang-java linenums">package com.aliyuncs.endpoint;
+
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.endpoint.location.model.v20150612.DescribeEndpointsRequest;
+import com.aliyuncs.endpoint.location.model.v20150612.DescribeEndpointsResponse;
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.http.FormatType;
+import com.aliyuncs.http.ProtocolType;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class LocationServiceEndpointResolver extends EndpointResolverBase {
+
+    private final static String DEFAULT_LOCATION_SERVICE_ENDPOINT = &quot;location-readonly.aliyuncs.com&quot;;
+    private final static String DEFAULT_LOCATION_SERVICE_API_VERSION = &quot;2015-06-12&quot;;
+<span class="fc" id="L17">    public int locationServiceCallCounter = 0; // For test use</span>
+<span class="fc" id="L18">    protected String locationServiceEndpoint = DEFAULT_LOCATION_SERVICE_ENDPOINT;</span>
+<span class="fc" id="L19">    protected String locationServiceApiVersion = DEFAULT_LOCATION_SERVICE_API_VERSION;</span>
+    private DefaultAcsClient client;
+    private Set&lt;String&gt; invalidProductCodes;
+    private Set&lt;String&gt; validProductCodes;
+    private Set&lt;String&gt; invalidRegionIds;
+    private Set&lt;String&gt; validRegionIds;
+
+<span class="fc" id="L26">    public LocationServiceEndpointResolver(DefaultAcsClient client) {</span>
+<span class="fc" id="L27">        this.client = client;</span>
+<span class="fc" id="L28">        invalidProductCodes = new HashSet&lt;String&gt;();</span>
+<span class="fc" id="L29">        invalidRegionIds = new HashSet&lt;String&gt;();</span>
+<span class="fc" id="L30">        validProductCodes = new HashSet&lt;String&gt;();</span>
+<span class="fc" id="L31">        validRegionIds = new HashSet&lt;String&gt;();</span>
+<span class="fc" id="L32">    }</span>
+
+    public void setLocationServiceEndpoint(String endpoint) {
+<span class="fc" id="L35">        locationServiceEndpoint = endpoint;</span>
+<span class="fc" id="L36">    }</span>
+
+    @Override
+    public String resolve(ResolveEndpointRequest request) throws ClientException {
+<span class="fc bfc" id="L40" title="All 4 branches covered.">        if (request.locationServiceCode == null || request.locationServiceCode.length() == 0) {</span>
+<span class="fc" id="L41">            return null;</span>
+        }
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (invalidProductCodes.contains(request.productCodeLower)) {</span>
+<span class="fc" id="L45">            return null;</span>
+        }
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (invalidRegionIds.contains(request.regionId)) {</span>
+<span class="fc" id="L49">            return null;</span>
+        }
+
+<span class="fc" id="L52">        String key = makeEndpointKey(request);</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (endpointsData.containsKey(key)) {</span>
+            // The endpoint can be null when last fetch is failed
+<span class="nc" id="L55">            return endpointsData.get(key);</span>
+        }
+<span class="fc" id="L57">        return getEndpointFromLocationService(key, request);</span>
+    }
+
+    synchronized private String getEndpointFromLocationService(String key, ResolveEndpointRequest request)
+            throws ClientException {
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if (endpointsData.containsKey(key)) {</span>
+<span class="nc" id="L63">            return endpointsData.get(key);</span>
+        }
+
+<span class="fc" id="L66">        callLocationService(key, request);</span>
+<span class="fc" id="L67">        locationServiceCallCounter += 1;</span>
+
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (endpointsData.containsKey(key)) {</span>
+<span class="fc" id="L70">            return endpointsData.get(key);</span>
+        }
+
+<span class="nc" id="L73">        return null;</span>
+    }
+
+    private void callLocationService(String key, ResolveEndpointRequest request) throws ClientException {
+<span class="fc" id="L77">        DescribeEndpointsRequest describeEndpointsRequest = new DescribeEndpointsRequest();</span>
+<span class="fc" id="L78">        describeEndpointsRequest.setSysProtocol(ProtocolType.HTTPS);</span>
+<span class="fc" id="L79">        describeEndpointsRequest.setAcceptFormat(FormatType.JSON);</span>
+<span class="fc" id="L80">        describeEndpointsRequest.setId(request.regionId);</span>
+<span class="fc" id="L81">        describeEndpointsRequest.setServiceCode(request.locationServiceCode);</span>
+<span class="fc" id="L82">        describeEndpointsRequest.setType(request.endpointType);</span>
+<span class="fc" id="L83">        describeEndpointsRequest.setSysEndpoint(locationServiceEndpoint);</span>
+<span class="fc" id="L84">        describeEndpointsRequest.setVersion(locationServiceApiVersion);</span>
+
+        DescribeEndpointsResponse response;
+        try {
+<span class="fc" id="L88">            response = client.getAcsResponse(describeEndpointsRequest);</span>
+<span class="fc" id="L89">        } catch (ClientException e) {</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (&quot;InvalidRegionId&quot;.equals(e.getErrCode())</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">                    &amp;&amp; &quot;The specified region does not exist.&quot;.equals(e.getErrMsg())) {</span>
+                // No such region
+<span class="fc" id="L93">                invalidRegionIds.add(request.regionId);</span>
+<span class="fc" id="L94">                putEndpointEntry(key, null);</span>
+<span class="fc" id="L95">                return;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            } else if (&quot;Illegal Parameter&quot;.equals(e.getErrCode())</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                    &amp;&amp; &quot;Please check the parameters&quot;.equals(e.getErrMsg())) {</span>
+                // No such product
+<span class="fc" id="L99">                invalidProductCodes.add(request.productCodeLower);</span>
+<span class="fc" id="L100">                putEndpointEntry(key, null);</span>
+<span class="fc" id="L101">                return;</span>
+            } else {
+<span class="fc" id="L103">                throw e;</span>
+            }
+<span class="fc" id="L105">        }</span>
+
+        // As long as code gets here
+        // the product code and the region id is valid
+        // the endpoint can be still not found
+<span class="fc" id="L110">        validProductCodes.add(request.productCodeLower);</span>
+<span class="fc" id="L111">        validRegionIds.add(request.regionId);</span>
+
+
+<span class="fc" id="L114">        boolean foundFlag = false;</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        for (DescribeEndpointsResponse.Endpoint endpoint : response.getEndpoints()) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (endpoint.getSerivceCode().equals(request.locationServiceCode)</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">                    &amp;&amp; endpoint.getType().equals(request.endpointType)) {</span>
+<span class="fc" id="L118">                foundFlag = true;</span>
+<span class="fc" id="L119">                putEndpointEntry(key, endpoint.getEndpoint());</span>
+<span class="fc" id="L120">                break;</span>
+            }
+<span class="fc" id="L122">        }</span>
+
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (!foundFlag) {</span>
+<span class="nc" id="L125">            putEndpointEntry(key, null);</span>
+        }
+<span class="fc" id="L127">    }</span>
+
+    @Override
+    public boolean isProductCodeValid(ResolveEndpointRequest request) {
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (request.locationServiceCode != null) {</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            return !invalidProductCodes.contains(request.productCodeLower);</span>
+        }
+<span class="fc" id="L134">        return false;</span>
+    }
+
+    @Override
+    public boolean isRegionIdValid(ResolveEndpointRequest request) {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (request.locationServiceCode != null) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            return !invalidRegionIds.contains(request.regionId);</span>
+        }
+<span class="fc" id="L142">        return false;</span>
+    }
+
+    @Override
+    public String makeEndpointKey(ResolveEndpointRequest request) {
+<span class="fc" id="L147">        return makeEndpointKey(</span>
+                request.productCode, request.locationServiceCode,
+                request.regionId, request.endpointType
+        );
+    }
+
+    public String makeEndpointKey(String productCode, String locationServiceCode, String regionId,
+                                  String endpointType) {
+<span class="fc" id="L155">        return productCode.toLowerCase() + &quot;.&quot; + locationServiceCode + &quot;.&quot;</span>
+<span class="fc" id="L156">                + regionId.toLowerCase() + &quot;.&quot; + endpointType;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocalConfigRegionalEndpointResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs.endpoint</a> &gt; <span class="el_source">LocalConfigRegionalEndpointResolver.java</span></div><h1>LocalConfigRegionalEndpointResolver.java</h1><pre class="source lang-java linenums">package com.aliyuncs.endpoint;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.InputStream;
+import java.util.*;
+
+public class LocalConfigRegionalEndpointResolver extends EndpointResolverBase {
+
+    protected static final String ENDPOINT_JSON = &quot;endpoints.json&quot;;
+<span class="fc" id="L14">    private Set&lt;String&gt; validRegionIds = new HashSet&lt;String&gt;();</span>
+<span class="fc" id="L15">    private Map&lt;String, String&gt; locationCodeMapping = new HashMap&lt;String, String&gt;();</span>
+    private JsonObject regionalEndpointData;
+
+<span class="fc" id="L18">    public LocalConfigRegionalEndpointResolver() {</span>
+<span class="fc" id="L19">        JsonObject obj = readLocalConfigAsJsonObject();</span>
+<span class="fc" id="L20">        initLocalConfig(obj);</span>
+<span class="fc" id="L21">    }</span>
+
+<span class="fc" id="L23">    public LocalConfigRegionalEndpointResolver(String configJsonStr) {</span>
+        // For testability
+<span class="fc" id="L25">        JsonObject obj = (new JsonParser()).parse(configJsonStr).getAsJsonObject();</span>
+<span class="fc" id="L26">        initLocalConfig(obj);</span>
+<span class="fc" id="L27">    }</span>
+
+    private void initLocalConfig(JsonObject obj) {
+<span class="fc" id="L30">        initRegionalEndpointData(obj);</span>
+<span class="fc" id="L31">        initRegionIds(obj);</span>
+<span class="fc" id="L32">        initLocationCodeMapping(obj);</span>
+<span class="fc" id="L33">    }</span>
+
+    private void initRegionalEndpointData(JsonObject obj) {
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (!obj.has(&quot;regional_endpoints&quot;)) {</span>
+<span class="fc" id="L37">            return;</span>
+        }
+<span class="fc" id="L39">        regionalEndpointData = obj.get(&quot;regional_endpoints&quot;).getAsJsonObject();</span>
+<span class="fc" id="L40">        JsonObject regionalEndpoints = obj.get(&quot;regional_endpoints&quot;).getAsJsonObject();</span>
+<span class="fc" id="L41">        Set&lt;String&gt; regionalEndpointsKeySet = new HashSet&lt;String&gt;();</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        for (Map.Entry&lt;String, JsonElement&gt; entry : regionalEndpoints.entrySet()) {</span>
+<span class="fc" id="L43">            regionalEndpointsKeySet.add(entry.getKey());</span>
+<span class="fc" id="L44">        }</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        for (String normalizedProductCode : regionalEndpointsKeySet) {</span>
+<span class="fc" id="L46">            JsonObject productData = regionalEndpoints.get(normalizedProductCode).getAsJsonObject();</span>
+<span class="fc" id="L47">            Set&lt;String&gt; productDataKeySet = new HashSet&lt;String&gt;();</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            for (Map.Entry&lt;String, JsonElement&gt; entry : productData.entrySet()) {</span>
+<span class="fc" id="L49">                productDataKeySet.add(entry.getKey());</span>
+<span class="fc" id="L50">            }</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            for (String regionId : productDataKeySet) {</span>
+<span class="fc" id="L52">                String endpoint = productData.get(regionId).getAsString();</span>
+<span class="fc" id="L53">                putEndpointEntry(makeEndpointKey(normalizedProductCode, regionId), endpoint);</span>
+<span class="fc" id="L54">            }</span>
+<span class="fc" id="L55">        }</span>
+<span class="fc" id="L56">    }</span>
+
+    protected void initRegionIds(JsonObject obj) {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (!obj.has(&quot;regions&quot;)) {</span>
+<span class="fc" id="L60">            return;</span>
+        }
+<span class="fc" id="L62">        JsonArray regions = obj.get(&quot;regions&quot;).getAsJsonArray();</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (JsonElement regionData : regions) {</span>
+<span class="fc" id="L64">            validRegionIds.add(regionData.getAsString());</span>
+<span class="fc" id="L65">        }</span>
+<span class="fc" id="L66">    }</span>
+
+    protected void initLocationCodeMapping(JsonObject obj) {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (!obj.has(&quot;location_code_mapping&quot;)) {</span>
+<span class="fc" id="L70">            return;</span>
+        }
+<span class="fc" id="L72">        JsonObject mappingData = obj.get(&quot;location_code_mapping&quot;).getAsJsonObject();</span>
+<span class="fc" id="L73">        Set&lt;String&gt; keySet = new HashSet&lt;String&gt;();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (Map.Entry&lt;String, JsonElement&gt; entry : mappingData.entrySet()) {</span>
+<span class="fc" id="L75">            keySet.add(entry.getKey());</span>
+<span class="fc" id="L76">        }</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (String productCode : keySet) {</span>
+<span class="fc" id="L78">            String locationServiceCode = mappingData.get(productCode).getAsString();</span>
+<span class="fc" id="L79">            locationCodeMapping.put(productCode, locationServiceCode);</span>
+<span class="fc" id="L80">        }</span>
+<span class="fc" id="L81">    }</span>
+
+    protected String getNormalizedProductCode(String productCode) {
+<span class="fc" id="L84">        String productCodeLower = productCode.toLowerCase();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (locationCodeMapping.containsKey(productCodeLower)) {</span>
+<span class="fc" id="L86">            return locationCodeMapping.get(productCodeLower);</span>
+        }
+<span class="fc" id="L88">        return productCodeLower;</span>
+    }
+
+    protected JsonObject readLocalConfigAsJsonObject() {
+<span class="fc" id="L92">        ClassLoader classLoader = getClass().getClassLoader();</span>
+<span class="fc" id="L93">        InputStream is = classLoader.getResourceAsStream(ENDPOINT_JSON);</span>
+<span class="fc" id="L94">        Scanner scanner = new Scanner(is, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L95">        scanner.useDelimiter(&quot;\0&quot;);</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        String jsonStr = scanner.hasNext() ? scanner.next() : &quot;&quot;;</span>
+<span class="fc" id="L97">        scanner.close();</span>
+<span class="fc" id="L98">        JsonObject endpointData = (new JsonParser()).parse(jsonStr).getAsJsonObject();</span>
+<span class="fc" id="L99">        return endpointData;</span>
+    }
+
+    @Override
+    public String resolve(ResolveEndpointRequest request) {
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (request.isOpenApiEndpoint()) {</span>
+<span class="fc" id="L105">            return fetchEndpointEntry(request);</span>
+        } else {
+<span class="fc" id="L107">            return null;</span>
+        }
+    }
+
+    @Override
+    public String makeEndpointKey(ResolveEndpointRequest request) {
+<span class="fc" id="L113">        return makeEndpointKey(request.productCodeLower, request.regionId);</span>
+    }
+
+    public String makeEndpointKey(String productCodeLower, String regionId) {
+<span class="fc" id="L117">        return getNormalizedProductCode(productCodeLower) + &quot;.&quot; + regionId.toLowerCase();</span>
+    }
+
+    @Override
+    public boolean isRegionIdValid(ResolveEndpointRequest request) {
+<span class="fc" id="L122">        return validRegionIds.contains(request.regionId);</span>
+    }
+
+    @Override
+    public Set&lt;String&gt; getValidRegionIdsByProduct(String productCodeLower) {
+<span class="fc" id="L127">        String code = getNormalizedProductCode(productCodeLower);</span>
+<span class="fc bfc" id="L128" title="All 4 branches covered.">        if (regionalEndpointData != null &amp;&amp; regionalEndpointData.has(code)) {</span>
+<span class="fc" id="L129">            JsonObject regionalEndpoints = regionalEndpointData.get(code).getAsJsonObject();</span>
+<span class="fc" id="L130">            Set&lt;String&gt; validRegionIdsByProduct = new HashSet&lt;String&gt;();</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            for (Map.Entry&lt;String, JsonElement&gt; entry : regionalEndpoints.entrySet()) {</span>
+<span class="fc" id="L132">                validRegionIdsByProduct.add(entry.getKey());</span>
+<span class="fc" id="L133">            }</span>
+<span class="fc" id="L134">            return validRegionIdsByProduct;</span>
+        }
+<span class="fc" id="L136">        return null;</span>
+    }
+
+    @Override
+    public boolean isProductCodeValid(ResolveEndpointRequest request) {
+<span class="fc" id="L141">        ResolveEndpointRequest request2 = new ResolveEndpointRequest(</span>
+                request.regionId,
+<span class="fc" id="L143">                getNormalizedProductCode(request.productCode),</span>
+                null,
+                null
+        );
+<span class="fc" id="L147">        return super.isProductCodeValid(request2);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

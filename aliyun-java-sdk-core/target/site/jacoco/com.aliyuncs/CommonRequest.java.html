@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommonRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">aliyun-java-sdk-core</a> &gt; <a href="index.source.html" class="el_package">com.aliyuncs</a> &gt; <span class="el_source">CommonRequest.java</span></div><h1>CommonRequest.java</h1><pre class="source lang-java linenums">package com.aliyuncs;
+
+import com.aliyuncs.http.FormatType;
+import com.aliyuncs.http.MethodType;
+import com.aliyuncs.http.ProtocolType;
+import com.aliyuncs.regions.ProductDomain;
+
+import java.util.HashMap;
+import java.util.Map;
+
+<span class="fc" id="L11">public class CommonRequest {</span>
+
+<span class="fc" id="L13">    private final Map&lt;String, String&gt; queryParameters = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L14">    private final Map&lt;String, String&gt; bodyParameters = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L15">    private final Map&lt;String, String&gt; headParameters = new HashMap&lt;String, String&gt;();</span>
+<span class="fc" id="L16">    private String version = null;</span>
+<span class="fc" id="L17">    private String product = null;</span>
+<span class="fc" id="L18">    private String action = null;</span>
+<span class="fc" id="L19">    private String locationProduct = null;</span>
+<span class="fc" id="L20">    private String endpointType = null;</span>
+<span class="fc" id="L21">    private String regionId = null;</span>
+<span class="fc" id="L22">    private ProtocolType protocol = null;</span>
+<span class="fc" id="L23">    private Integer connectTimeout = null;</span>
+<span class="fc" id="L24">    private Integer readTimeout = null;</span>
+<span class="fc" id="L25">    private MethodType method = null;</span>
+<span class="fc" id="L26">    private FormatType httpContentType = null;</span>
+<span class="fc" id="L27">    private byte[] httpContent = null;</span>
+<span class="fc" id="L28">    private String encoding = null;</span>
+
+<span class="fc" id="L30">    private String uriPattern = null;</span>
+<span class="fc" id="L31">    private Map&lt;String, String&gt; pathParameters = new HashMap&lt;String, String&gt;();</span>
+
+<span class="fc" id="L33">    private String domain = null;</span>
+
+    @SuppressWarnings(&quot;rawtypes&quot;)
+    public AcsRequest buildRequest() {
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (uriPattern != null) {</span>
+<span class="fc" id="L38">            CommonRoaRequest request = new CommonRoaRequest(product);</span>
+<span class="fc" id="L39">            request.setSysUriPattern(uriPattern);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            for (String pathParamKey : pathParameters.keySet()) {</span>
+<span class="fc" id="L41">                request.putPathParameter(pathParamKey, pathParameters.get(pathParamKey));</span>
+<span class="fc" id="L42">            }</span>
+<span class="fc" id="L43">            fillParams(request);</span>
+
+<span class="fc" id="L45">            return request;</span>
+        } else {
+<span class="fc" id="L47">            CommonRpcRequest request = new CommonRpcRequest(product);</span>
+<span class="fc" id="L48">            fillParams(request);</span>
+
+<span class="fc" id="L50">            return request;</span>
+        }
+    }
+
+    @SuppressWarnings(&quot;rawtypes&quot;)
+    private void fillParams(AcsRequest request) {
+<span class="fc" id="L56">        request.putHeaderParameter(&quot;x-sdk-invoke-type&quot;, &quot;common&quot;);</span>
+
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (version != null) {</span>
+<span class="fc" id="L59">            request.setSysVersion(version);</span>
+        }
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (action != null) {</span>
+<span class="fc" id="L62">            request.setSysActionName(action);</span>
+        }
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (regionId != null) {</span>
+<span class="fc" id="L65">            request.setSysRegionId(regionId);</span>
+        }
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (locationProduct != null) {</span>
+<span class="fc" id="L68">            request.setSysLocationProduct(locationProduct);</span>
+        }
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (endpointType != null) {</span>
+<span class="fc" id="L71">            request.setSysEndpointType(endpointType);</span>
+        }
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (connectTimeout != null) {</span>
+<span class="fc" id="L74">            request.setSysConnectTimeout(connectTimeout);</span>
+        }
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (readTimeout != null) {</span>
+<span class="fc" id="L77">            request.setSysReadTimeout(readTimeout);</span>
+        }
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (method != null) {</span>
+<span class="fc" id="L80">            request.setSysMethod(method);</span>
+        }
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (protocol != null) {</span>
+<span class="fc" id="L83">            request.setSysProtocol(protocol);</span>
+        }
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (domain != null) {</span>
+<span class="fc" id="L86">            ProductDomain productDomain = new ProductDomain(product, domain);</span>
+<span class="fc" id="L87">            request.setSysProductDomain(productDomain);</span>
+        }
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (httpContent != null) {</span>
+<span class="fc" id="L90">            request.setHttpContent(httpContent, encoding, httpContentType);</span>
+        }
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (String queryParamKey : queryParameters.keySet()) {</span>
+<span class="fc" id="L93">            request.putQueryParameter(queryParamKey, queryParameters.get(queryParamKey));</span>
+<span class="fc" id="L94">        }</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (String bodyParamKey : bodyParameters.keySet()) {</span>
+<span class="fc" id="L96">            request.putBodyParameter(bodyParamKey, bodyParameters.get(bodyParamKey));</span>
+<span class="fc" id="L97">        }</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for (String headParamKey : headParameters.keySet()) {</span>
+<span class="fc" id="L99">            request.putHeaderParameter(headParamKey, headParameters.get(headParamKey));</span>
+<span class="fc" id="L100">        }</span>
+<span class="fc" id="L101">    }</span>
+
+    /**
+     * @Deprecated : Use getSysVersion instead of this
+     */
+    @Deprecated
+    public String getVersion() {
+<span class="fc" id="L108">        return version;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysVersion instead of this
+     */
+    @Deprecated
+    public void setVersion(String version) {
+<span class="fc" id="L116">        this.version = version;</span>
+<span class="fc" id="L117">    }</span>
+
+    /**
+     * @Deprecated : Use getSysProduct instead of this
+     */
+    @Deprecated
+    public String getProduct() {
+<span class="fc" id="L124">        return product;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysProduct instead of this
+     */
+    @Deprecated
+    public void setProduct(String product) {
+<span class="fc" id="L132">        this.product = product;</span>
+<span class="fc" id="L133">    }</span>
+
+    /**
+     * @Deprecated : Use getSysAction instead of this
+     */
+    @Deprecated
+    public String getAction() {
+<span class="fc" id="L140">        return action;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysAction instead of this
+     */
+    @Deprecated
+    public void setAction(String action) {
+<span class="fc" id="L148">        this.action = action;</span>
+<span class="fc" id="L149">    }</span>
+
+    /**
+     * @Deprecated : Use getSysLocationProduct instead of this
+     */
+    @Deprecated
+    public String getLocationProduct() {
+<span class="fc" id="L156">        return locationProduct;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysLocationProduct instead of this
+     */
+    @Deprecated
+    public void setLocationProduct(String locationProduct) {
+<span class="fc" id="L164">        this.locationProduct = locationProduct;</span>
+<span class="fc" id="L165">    }</span>
+
+    /**
+     * @Deprecated : Use getSysEndpointType instead of this
+     */
+    @Deprecated
+    public String getEndpointType() {
+<span class="fc" id="L172">        return endpointType;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysEndpointType instead of this
+     */
+    @Deprecated
+    public void setEndpointType(String endpointType) {
+<span class="fc" id="L180">        this.endpointType = endpointType;</span>
+<span class="fc" id="L181">    }</span>
+
+    /**
+     * @Deprecated : Use getSysRegionId instead of this
+     */
+    @Deprecated
+    public String getRegionId() {
+<span class="fc" id="L188">        return regionId;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysRegionId instead of this
+     */
+    @Deprecated
+    public void setRegionId(String regionId) {
+<span class="fc" id="L196">        this.regionId = regionId;</span>
+<span class="fc" id="L197">    }</span>
+
+    /**
+     * @Deprecated : Use getSysProtocol instead of this
+     */
+    @Deprecated
+    public ProtocolType getProtocol() {
+<span class="fc" id="L204">        return protocol;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysProtocol instead of this
+     */
+    @Deprecated
+    public void setProtocol(ProtocolType protocol) {
+<span class="fc" id="L212">        this.protocol = protocol;</span>
+<span class="fc" id="L213">    }</span>
+
+    public void putBodyParameter(String name, Object value) {
+<span class="fc" id="L216">        setParameter(this.bodyParameters, name, value);</span>
+<span class="fc" id="L217">    }</span>
+
+    public void putQueryParameter(String name, String value) {
+<span class="fc" id="L220">        setParameter(this.queryParameters, name, value);</span>
+<span class="fc" id="L221">    }</span>
+
+    public void putHeadParameter(String name, String value) {
+<span class="fc" id="L224">        setParameter(this.headParameters, name, value);</span>
+<span class="fc" id="L225">    }</span>
+
+    private void setParameter(Map&lt;String, String&gt; map, String name, Object value) {
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (null == map) {</span>
+<span class="fc" id="L229">            return;</span>
+        }
+<span class="fc" id="L231">        map.put(name, String.valueOf(value));</span>
+<span class="fc" id="L232">    }</span>
+
+    /**
+     * @Deprecated : Use getSysConnectTimeout instead of this
+     */
+    @Deprecated
+    public Integer getConnectTimeout() {
+<span class="fc" id="L239">        return connectTimeout;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysConnectTimeout instead of this
+     */
+    @Deprecated
+    public void setConnectTimeout(Integer connectTimeout) {
+<span class="fc" id="L247">        this.connectTimeout = connectTimeout;</span>
+<span class="fc" id="L248">    }</span>
+
+    /**
+     * @Deprecated : Use getSysReadTimeout instead of this
+     */
+    @Deprecated
+    public Integer getReadTimeout() {
+<span class="fc" id="L255">        return readTimeout;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysReadTimeout instead of this
+     */
+    @Deprecated
+    public void setReadTimeout(Integer readTimeout) {
+<span class="fc" id="L263">        this.readTimeout = readTimeout;</span>
+<span class="fc" id="L264">    }</span>
+
+    /**
+     * @Deprecated : Use getSysMethod instead of this
+     */
+    @Deprecated
+    public MethodType getMethod() {
+<span class="fc" id="L271">        return method;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysMethod instead of this
+     */
+    @Deprecated
+    public void setMethod(MethodType method) {
+<span class="fc" id="L279">        this.method = method;</span>
+<span class="fc" id="L280">    }</span>
+
+    /**
+     * @Deprecated : Use getSysUriPattern instead of this
+     */
+    @Deprecated
+    public String getUriPattern() {
+<span class="fc" id="L287">        return uriPattern;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysUriPattern instead of this
+     */
+    @Deprecated
+    public void setUriPattern(String uriPattern) {
+<span class="fc" id="L295">        this.uriPattern = uriPattern;</span>
+<span class="fc" id="L296">    }</span>
+
+    public void putPathParameter(String name, String value) {
+<span class="fc" id="L299">        setParameter(this.pathParameters, name, value);</span>
+<span class="fc" id="L300">    }</span>
+
+    /**
+     * @Deprecated : Use getSysDomain instead of this
+     */
+    @Deprecated
+    public String getDomain() {
+<span class="fc" id="L307">        return domain;</span>
+    }
+
+    /**
+     * @Deprecated : Use setSysDomain instead of this
+     */
+    @Deprecated
+    public void setDomain(String domain) {
+<span class="fc" id="L315">        this.domain = domain;</span>
+<span class="fc" id="L316">    }</span>
+
+    public FormatType getHttpContentType() {
+<span class="fc" id="L319">        return httpContentType;</span>
+    }
+
+    public byte[] getHttpContent() {
+<span class="fc" id="L323">        return httpContent;</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysEncoding instead of this
+     */
+    @Deprecated
+    public String getEncoding() {
+<span class="fc" id="L331">        return encoding;</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysQueryParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getQueryParameters() {
+<span class="fc" id="L339">        return queryParameters;</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysBodyParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getBodyParameters() {
+<span class="fc" id="L347">        return bodyParameters;</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysHeadParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getHeadParameters() {
+<span class="fc" id="L355">        return headParameters;</span>
+    }
+
+    /**
+     * @Deprecated : Use getSysPathParameters instead of this
+     */
+    @Deprecated
+    public Map&lt;String, String&gt; getPathParameters() {
+<span class="fc" id="L363">        return pathParameters;</span>
+    }
+
+    public void setHttpContent(byte[] content, String encoding, FormatType format) {
+<span class="fc bfc" id="L367" title="All 6 branches covered.">        if (content == null || encoding == null || format == null) {</span>
+<span class="fc" id="L368">            return;</span>
+        }
+<span class="fc" id="L370">        this.httpContent = content;</span>
+<span class="fc" id="L371">        this.httpContentType = format;</span>
+<span class="fc" id="L372">        this.encoding = encoding;</span>
+<span class="fc" id="L373">    }</span>
+
+    public String getSysVersion() {
+<span class="fc" id="L376">        return version;</span>
+    }
+
+    public void setSysVersion(String version) {
+<span class="fc" id="L380">        this.version = version;</span>
+<span class="fc" id="L381">    }</span>
+
+    public String getSysProduct() {
+<span class="fc" id="L384">        return product;</span>
+    }
+
+    public void setSysProduct(String product) {
+<span class="fc" id="L388">        this.product = product;</span>
+<span class="fc" id="L389">    }</span>
+
+    public String getSysAction() {
+<span class="fc" id="L392">        return action;</span>
+    }
+
+    public void setSysAction(String action) {
+<span class="fc" id="L396">        this.action = action;</span>
+<span class="fc" id="L397">    }</span>
+
+    public String getSysLocationProduct() {
+<span class="fc" id="L400">        return locationProduct;</span>
+    }
+
+    public void setSysLocationProduct(String locationProduct) {
+<span class="fc" id="L404">        this.locationProduct = locationProduct;</span>
+<span class="fc" id="L405">    }</span>
+
+    public String getSysEndpointType() {
+<span class="fc" id="L408">        return endpointType;</span>
+    }
+
+    public void setSysEndpointType(String endpointType) {
+<span class="fc" id="L412">        this.endpointType = endpointType;</span>
+<span class="fc" id="L413">    }</span>
+
+    public String getSysRegionId() {
+<span class="fc" id="L416">        return regionId;</span>
+    }
+
+    public void setSysRegionId(String regionId) {
+<span class="fc" id="L420">        this.regionId = regionId;</span>
+<span class="fc" id="L421">    }</span>
+
+    public ProtocolType getSysProtocol() {
+<span class="fc" id="L424">        return protocol;</span>
+    }
+
+    public void setSysProtocol(ProtocolType protocol) {
+<span class="fc" id="L428">        this.protocol = protocol;</span>
+<span class="fc" id="L429">    }</span>
+
+
+    public Integer getSysConnectTimeout() {
+<span class="fc" id="L433">        return connectTimeout;</span>
+    }
+
+    public void setSysConnectTimeout(Integer connectTimeout) {
+<span class="fc" id="L437">        this.connectTimeout = connectTimeout;</span>
+<span class="fc" id="L438">    }</span>
+
+    public Integer getSysReadTimeout() {
+<span class="fc" id="L441">        return readTimeout;</span>
+    }
+
+    public void setSysReadTimeout(Integer readTimeout) {
+<span class="fc" id="L445">        this.readTimeout = readTimeout;</span>
+<span class="fc" id="L446">    }</span>
+
+    public MethodType getSysMethod() {
+<span class="fc" id="L449">        return method;</span>
+    }
+
+    public void setSysMethod(MethodType method) {
+<span class="fc" id="L453">        this.method = method;</span>
+<span class="fc" id="L454">    }</span>
+
+    public String getSysUriPattern() {
+<span class="fc" id="L457">        return uriPattern;</span>
+    }
+
+    public void setSysUriPattern(String uriPattern) {
+<span class="fc" id="L461">        this.uriPattern = uriPattern;</span>
+<span class="fc" id="L462">    }</span>
+
+    public String getSysDomain() {
+<span class="fc" id="L465">        return domain;</span>
+    }
+
+    public void setSysDomain(String domain) {
+<span class="fc" id="L469">        this.domain = domain;</span>
+<span class="fc" id="L470">    }</span>
+
+    public String getSysEncoding() {
+<span class="fc" id="L473">        return encoding;</span>
+    }
+
+    public Map&lt;String, String&gt; getSysQueryParameters() {
+<span class="fc" id="L477">        return queryParameters;</span>
+    }
+
+    public Map&lt;String, String&gt; getSysBodyParameters() {
+<span class="fc" id="L481">        return bodyParameters;</span>
+    }
+
+    public Map&lt;String, String&gt; getSysHeadParameters() {
+<span class="fc" id="L485">        return headParameters;</span>
+    }
+
+    public Map&lt;String, String&gt; getSysPathParameters() {
+<span class="fc" id="L489">        return pathParameters;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
